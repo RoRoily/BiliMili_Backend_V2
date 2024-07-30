@@ -102,7 +102,7 @@ public class ArticleServiceImpl implements ArticleService {
         // 多线程异步并行查询用户信息和分区信息并封装
         Article finalArticle = article;
         CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
-            map.put("user", userService.getUserById(finalArticle.getUid()));
+            map.put("user", userService.getUserByUId(finalArticle.getUid()));
         }, taskExecutor);
         map.put("article",article);
         // 使用join()等待userFuture和categoryFuture任务完成
@@ -191,7 +191,7 @@ public class ArticleServiceImpl implements ArticleService {
                     map.put("article", article);
 
                     CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
-                        map.put("user", userService.getUserById(article.getUid()));
+                        map.put("user", userService.getUserByUId(article.getUid()));
                         //map.put("stats", articleStatsService.getArticleStatsById(article.getAid()));
                     }, taskExecutor);
 
@@ -429,7 +429,7 @@ public class ArticleServiceImpl implements ArticleService {
         // 多线程异步并行查询用户信息和分区信息并封装
         Article finalArticle = article;
         CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
-            map.put("user", userService.getUserById(finalArticle.getUid()));
+            map.put("user", userService.getUserByUId(finalArticle.getUid()));
             //map.put("stats", StatsService.getVideoStatsById(finalVideo.getVid()));
         }, taskExecutor);
         map.put("article",article);

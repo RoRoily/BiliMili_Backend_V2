@@ -27,7 +27,7 @@ public class PostServiceImpl implements PostService {
         List<Post> postList = postMapper.selectList(queryWrapper);
         List<PostTree> postTreeList = new ArrayList<>();
         for(Post post : postList){
-            UserDTO userDTO = userService.getUserById(post.getUid());
+            UserDTO userDTO = userService.getUserByUId(post.getUid());
             PostTree postTree = new PostTree(userDTO, post.getPid(), post.getContent(), post.getCreateTime());
             postTreeList.add(postTree);
         }

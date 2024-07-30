@@ -120,7 +120,7 @@ public class NoticeHandler {
                     map.put("chat", chatService.getChat(finalUser_id, chatDetailed.getAnotherId()));
                 }, taskExecutor);
                 CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
-                    map.put("user", userService.getUserById(finalUser_id));
+                    map.put("user", userService.getUserByUId(finalUser_id));
                 }, taskExecutor);
                 System.out.println("map测试" +  map);
                 chatFuture.join();
@@ -181,7 +181,7 @@ public class NoticeHandler {
                 QueryWrapper<Article> queryWrapper2 = new QueryWrapper<>();
                 queryWrapper2.eq("aid",aid);
                 Article article = articleMapper.selectOne(queryWrapper2);
-                UserDTO userDTO = userService.getUserById(article.getUid());
+                UserDTO userDTO = userService.getUserByUId(article.getUid());
                 String link = "http://116.62.87.161:8787/article/" + aid;
                 String message = "你关注的 up" + userDTO.getNickname() + " 发布了专栏，快来看看吧，<a href='" + link + "'>" + article.getTitle() + "</a>";
                 chatDetailed.setContent(message);
@@ -210,7 +210,7 @@ public class NoticeHandler {
                 }, taskExecutor);
                 CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
                     System.out.println("3");
-                    map.put("user", userService.getUserById(finalUser_id));
+                    map.put("user", userService.getUserByUId(finalUser_id));
                     System.out.println("4");
                 }, taskExecutor);
                 chatFuture.join();

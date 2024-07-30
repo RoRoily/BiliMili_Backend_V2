@@ -13,7 +13,7 @@ public interface UserService {
      * @param id 用户ID
      * @return 用户可见信息实体类 UserDTO
      */
-    UserDTO getUserById(Integer id);
+    UserDTO getUserByUId(Integer id);
 
     /**
      * 根据有序uid列表查询用户信息

@@ -60,7 +60,7 @@ public class UserController {
     @GetMapping("/user/info/get-one")
     public CustomResponse getOneUserInfo(@RequestParam("uid") Integer uid) {
         CustomResponse customResponse = new CustomResponse();
-        customResponse.setData(userService.getUserById(uid));
+        customResponse.setData(userService.getUserByUId(uid));
         return customResponse;
     }
 }

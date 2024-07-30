@@ -79,7 +79,7 @@ public class ChatHandler {
                 map.put("chat", chatService.getChat(user_id, chatDetailed.getAnotherId()));
             }, taskExecutor);
             CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
-                map.put("user", userService.getUserById(user_id));
+                map.put("user", userService.getUserByUId(user_id));
             }, taskExecutor);
             chatFuture.join();
             userFuture.join();

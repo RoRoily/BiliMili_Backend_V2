@@ -142,7 +142,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
         String encodedPassword = passwordEncoder.encode(password);  // 密文存储
         String avatar_url = "https://cube.elemecdn.com/9/c2/f0ee8a3c7c9638a54940382568c9dpng.png";
-        String bg_url = "https://tinypic.host/images/2023/11/15/69PB2Q5W9D2U7L.png";
+        String background_url = "https://tinypic.host/images/2023/11/15/69PB2Q5W9D2U7L.png";
         Date now = new Date();
         User new_user = new User(
                 null,
@@ -150,16 +150,13 @@ public class UserAccountServiceImpl implements UserAccountService {
                 encodedPassword,
                 "用户_" + new_user_uid,
                 avatar_url,
-                bg_url,
+                background_url,
                 2,
                 "这个人很懒，什么都没留下~",
                 0,
                 (double) 0,
                 0,
                 0,
-                0,
-                0,
-                null,
                 now,
                 null
         );
@@ -245,15 +242,12 @@ public class UserAccountServiceImpl implements UserAccountService {
         userDTO.setUid(user.getUid());
         userDTO.setNickname(user.getNickname());
         userDTO.setAvatar_url(user.getAvatar());
-        userDTO.setBg_url(user.getBackground());
+        userDTO.setBackground_url(user.getBackground());
         userDTO.setGender(user.getGender());
         userDTO.setDescription(user.getDescription());
         userDTO.setExp(user.getExp());
         userDTO.setCoin(user.getCoin());
-        userDTO.setVip(user.getVip());
         userDTO.setState(user.getState());
-        userDTO.setAuth(user.getAuth());
-        userDTO.setAuthMsg(user.getAuthMsg());
 
         Map<String, Object> final_map = new HashMap<>();
         final_map.put("token", token);
@@ -304,15 +298,12 @@ public class UserAccountServiceImpl implements UserAccountService {
         userDTO.setUid(user.getUid());
         userDTO.setNickname(user.getNickname());
         userDTO.setAvatar_url(user.getAvatar());
-        userDTO.setBg_url(user.getBackground());
+        userDTO.setBackground_url(user.getBackground());
         userDTO.setGender(user.getGender());
         userDTO.setDescription(user.getDescription());
         userDTO.setExp(user.getExp());
         userDTO.setCoin(user.getCoin());
-        userDTO.setVip(user.getVip());
         userDTO.setState(user.getState());
-        userDTO.setAuth(user.getAuth());
-        userDTO.setAuthMsg(user.getAuthMsg());
 
         Map<String, Object> final_map = new HashMap<>();
         final_map.put("token", token);
@@ -329,7 +320,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     public CustomResponse personalInfo() {
         Integer loginUserId = currentUser.getUserId();
-        UserDTO userDTO = userService.getUserById(loginUserId);
+        UserDTO userDTO = userService.getUserByUId(loginUserId);
 
         CustomResponse customResponse = new CustomResponse();
         // 检查账号状态，1 表示封禁中，不允许登录，2表示账号注销了
@@ -388,15 +379,12 @@ public class UserAccountServiceImpl implements UserAccountService {
         userDTO.setUid(user.getUid());
         userDTO.setNickname(user.getNickname());
         userDTO.setAvatar_url(user.getAvatar());
-        userDTO.setBg_url(user.getBackground());
+        userDTO.setBackground_url(user.getBackground());
         userDTO.setGender(user.getGender());
         userDTO.setDescription(user.getDescription());
         userDTO.setExp(user.getExp());
         userDTO.setCoin(user.getCoin());
-        userDTO.setVip(user.getVip());
         userDTO.setState(user.getState());
-        userDTO.setAuth(user.getAuth());
-        userDTO.setAuthMsg(user.getAuthMsg());
         customResponse.setData(userDTO);
         return customResponse;
     }
@@ -456,7 +444,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         // 验证旧密码
         UsernamePasswordAuthenticationToken authenticationToken2 =
-                new UsernamePasswordAuthenticationToken(user.getUsername(), pw);
+                new UsernamePasswordAuthenticationToken(user.getAccount(), pw);
         try {
             authenticationProvider.authenticate(authenticationToken2);
         } catch (Exception e) {

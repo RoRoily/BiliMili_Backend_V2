@@ -114,7 +114,7 @@ public class VideoServiceImpl implements VideoService {
                     map.put("video", video);
 
                     CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
-                        map.put("user", userService.getUserById(video.getUid()));
+                        map.put("user", userService.getUserByUId(video.getUid()));
                         map.put("stats", videoStatsService.getVideoStatsById(video.getVid()));
                     }, taskExecutor);
 
@@ -173,7 +173,7 @@ public class VideoServiceImpl implements VideoService {
                     }
                     map.put("video", video);
                     CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
-                        map.put("user", userService.getUserById(video.getUid()));
+                        map.put("user", userService.getUserByUId(video.getUid()));
                         map.put("stats", videoStatsService.getVideoStatsById(video.getVid()));
                     }, taskExecutor);
                     CompletableFuture<Void> categoryFuture = CompletableFuture.runAsync(() -> {
@@ -206,7 +206,7 @@ public class VideoServiceImpl implements VideoService {
                     }
                     map.put("video", video);
                     CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
-                        map.put("user", userService.getUserById(video.getUid()));
+                        map.put("user", userService.getUserByUId(video.getUid()));
                         map.put("stats", videoStatsService.getVideoStatsById(video.getVid()));
                     }, taskExecutor);
                     CompletableFuture<Void> categoryFuture = CompletableFuture.runAsync(() -> {
@@ -241,7 +241,7 @@ public class VideoServiceImpl implements VideoService {
                     map.put("video", video);
                     map.put("stats", videoStats);
                     CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
-                        map.put("user", userService.getUserById(video.getUid()));
+                        map.put("user", userService.getUserByUId(video.getUid()));
                     }, taskExecutor);
                     CompletableFuture<Void> categoryFuture = CompletableFuture.runAsync(() -> {
                         map.put("category", categoryService.getCategoryById(video.getMcId(), video.getScId()));
@@ -286,7 +286,7 @@ public class VideoServiceImpl implements VideoService {
         // 多线程异步并行查询用户信息和分区信息并封装
         Video finalVideo = video;
         CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
-            map.put("user", userService.getUserById(finalVideo.getUid()));
+            map.put("user", userService.getUserByUId(finalVideo.getUid()));
             map.put("stats", videoStatsService.getVideoStatsById(finalVideo.getVid()));
         }, taskExecutor);
         CompletableFuture<Void> categoryFuture = CompletableFuture.runAsync(() -> {
@@ -327,7 +327,7 @@ public class VideoServiceImpl implements VideoService {
                     map.put("video", video);
 
                     CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
-                        map.put("user", userService.getUserById(video.getUid()));
+                        map.put("user", userService.getUserByUId(video.getUid()));
                         map.put("stats", videoStatsService.getVideoStatsById(video.getVid()));
                     }, taskExecutor);
 

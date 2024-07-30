@@ -64,21 +64,7 @@ public class UserServiceImpl implements UserService {
      * @return 用户可见信息实体类 UserDTO
      */
     @Override
-    public UserDTO getUserById(Integer id) {
-//        // 从redis中获取最新数据
-//        User user = redisUtil.getObject("user:" + id, User.class);
-//        // 如果redis中没有user数据，就从mysql中获取并更新到redis
-//        if (user == null) {
-//            user = userMapper.selectById(id);
-//            if (user == null) {
-//                return null;    // 如果uid不存在则返回空
-//            }
-//            User finalUser = user;
-//            // 使用 CompletableFuture.runAsync 异步地执行一个任务，该任务将 User 对象存储到 Redis 中，并设置默认的存活时间为1小时。
-//            CompletableFuture.runAsync(() -> {
-//                redisUtil.setExObjectValue("user:" + finalUser.getUid(), finalUser);
-//            }, taskExecutor);
-//        }
+    public UserDTO getUserByUId(Integer id) {
         User user = userMapper.selectById(id);
         if (user == null) {
             return null;    // 如果uid不存在则返回空
@@ -89,13 +75,11 @@ public class UserServiceImpl implements UserService {
         if (user.getState() == 2) {
             userDTO.setNickname("账号已注销");
             userDTO.setAvatar_url("https://cube.elemecdn.com/9/c2/f0ee8a3c7c9638a54940382568c9dpng.png");
-            userDTO.setBg_url("https://tinypic.host/images/2023/11/15/69PB2Q5W9D2U7L.png");
+            userDTO.setBackground_url("https://tinypic.host/images/2023/11/15/69PB2Q5W9D2U7L.png");
             userDTO.setGender(2);
             userDTO.setDescription("-");
             userDTO.setExp(0);
             userDTO.setCoin((double) 0);
-            userDTO.setVip(0);
-            userDTO.setAuth(0);
             userDTO.setVideoCount(0);
             userDTO.setFollowsCount(0);
             userDTO.setFansCount(0);
@@ -105,14 +89,11 @@ public class UserServiceImpl implements UserService {
         }
         userDTO.setNickname(user.getNickname());
         userDTO.setAvatar_url(user.getAvatar());
-        userDTO.setBg_url(user.getBackground());
+        userDTO.setBackground_url(user.getBackground());
         userDTO.setGender(user.getGender());
         userDTO.setDescription(user.getDescription());
         userDTO.setExp(user.getExp());
         userDTO.setCoin(user.getCoin());
-        userDTO.setVip(user.getVip());
-        userDTO.setAuth(user.getAuth());
-        userDTO.setAuthMsg(user.getAuthMsg());
         userDTO.setFollowsCount(0);
         userDTO.setFansCount(0);
         //获取用户对应的视频列表
@@ -148,77 +129,6 @@ public class UserServiceImpl implements UserService {
         userDTO.setFollowsCount(follow);
         return userDTO;
     }
-    /*
-    @Override
-    public UserDTO getUserById(Integer id) {
-        // 从redis中获取最新数据
-        User user = redisUtil.getObject("user:" + id, User.class);
-        // 如果redis中没有user数据，就从mysql中获取并更新到redis
-        if (user == null) {
-            user = userMapper.selectById(id);
-            if (user == null) {
-                return null;    // 如果uid不存在则返回空
-            }
-            User finalUser = user;
-            CompletableFuture.runAsync(() -> {
-                redisUtil.setExObjectValue("user:" + finalUser.getUid(), finalUser);  // 默认存活1小时
-            }, taskExecutor);
-        }
-        UserDTO userDTO = new UserDTO();
-        userDTO.setUid(user.getUid());
-        userDTO.setState(user.getState());
-        if (user.getState() == 2) {
-            userDTO.setNickname("账号已注销");
-            userDTO.setAvatar_url("https://cube.elemecdn.com/9/c2/f0ee8a3c7c9638a54940382568c9dpng.png");
-            userDTO.setBg_url("https://tinypic.host/images/2023/11/15/69PB2Q5W9D2U7L.png");
-            userDTO.setGender(2);
-            userDTO.setDescription("-");
-            userDTO.setExp(0);
-            userDTO.setCoin((double) 0);
-            userDTO.setVip(0);
-            userDTO.setAuth(0);
-            userDTO.setVideoCount(0);
-            userDTO.setFollowsCount(0);
-            userDTO.setFansCount(0);
-            userDTO.setLoveCount(0);
-            userDTO.setPlayCount(0);
-            return userDTO;
-        }
-        userDTO.setNickname(user.getNickname());
-        userDTO.setAvatar_url(user.getAvatar());
-        userDTO.setBg_url(user.getBackground());
-        userDTO.setGender(user.getGender());
-        userDTO.setDescription(user.getDescription());
-        userDTO.setExp(user.getExp());
-        userDTO.setCoin(user.getCoin());
-        userDTO.setVip(user.getVip());
-        userDTO.setAuth(user.getAuth());
-        userDTO.setAuthMsg(user.getAuthMsg());
-        userDTO.setFollowsCount(0);
-        userDTO.setFansCount(0);
-        Set<Object> set = redisUtil.zReverange("user_video_upload:" + user.getUid(), 0L, -1L);
-        if (set == null || set.size() == 0) {
-            userDTO.setVideoCount(0);
-            userDTO.setLoveCount(0);
-            userDTO.setPlayCount(0);
-            return userDTO;
-        }
-
-        // 并发执行每个视频数据统计的查询任务
-        List<VideoStats> list = set.stream().parallel()
-                .map(vid -> videoStatsService.getVideoStatsById((Integer) vid))
-                .collect(Collectors.toList());
-
-        int video = list.size(), love = 0, play = 0;
-        for (VideoStats videoStats : list) {
-            love = love + videoStats.getGood();
-            play = play + videoStats.getPlay();
-        }
-        userDTO.setVideoCount(video);
-        userDTO.setLoveCount(love);
-        userDTO.setPlayCount(play);
-        return userDTO;
-    }*/
 
     @Override
     public List<UserDTO> getUserByIdList(List<Integer> list) {
@@ -243,10 +153,7 @@ public class UserServiceImpl implements UserService {
                             user.getDescription(),
                             user.getExp(),
                             user.getCoin(),
-                            user.getVip(),
                             user.getState(),
-                            user.getAuth(),
-                            user.getAuthMsg(),
                             0,0,0,0,0
                     );
                     Set<Object> set = redisUtil.zReverange("user_video_upload:" + user.getUid(), 0L, -1L);

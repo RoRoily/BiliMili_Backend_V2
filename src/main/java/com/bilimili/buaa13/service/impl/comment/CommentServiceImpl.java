@@ -89,8 +89,8 @@ public class CommentServiceImpl implements CommentService {
         tree.setLove(comment.getLove());
         tree.setBad(comment.getBad());
 
-        tree.setUser(userService.getUserById(comment.getUid()));
-        tree.setToUser(userService.getUserById(comment.getToUserId()));
+        tree.setUser(userService.getUserByUId(comment.getUid()));
+        tree.setToUser(userService.getUserByUId(comment.getToUserId()));
 
         // 递归查询构建子评论树
         // 这里如果是根节点的评论，则查出他的子评论； 如果不是根节点评论，则不查，只填写 User 信息。
