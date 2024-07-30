@@ -1,8 +1,8 @@
 package com.bilimili.buaa13.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.mapper.FavoriteVideoMapper;
-import com.bilimili.buaa13.entity.CustomResponse;
 import com.bilimili.buaa13.entity.FavoriteVideo;
 import com.bilimili.buaa13.entity.Video;
 import com.bilimili.buaa13.service.utils.CurrentUser;
@@ -44,13 +44,13 @@ public class VideoController {
      * @return 无data返回 仅返回响应
      */
     @PostMapping("/video/change/status")
-    public CustomResponse updateStatus(@RequestParam("vid") Integer vid,
+    public ResponseResult updateStatus(@RequestParam("vid") Integer vid,
                                        @RequestParam("status") Integer status) {
         try {
             return videoService.updateVideoStatus(vid, status);
         } catch (Exception e) {
             e.printStackTrace();
-            return new CustomResponse(500, "操作失败", null);
+            return new ResponseResult(500, "操作失败", null);
         }
     }
 
@@ -59,8 +59,8 @@ public class VideoController {
      * @return  返回11条随机推荐视频
      */
     @GetMapping("/video/random/visitor")
-    public CustomResponse randomVideosForVisitor() {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult randomVideosForVisitor() {
+        ResponseResult responseResult = new ResponseResult();
         int count = 11;
         Set<Object> idSet = redisUtil.srandmember("video_status:1", count);
         List<Map<String, Object>> videoList = new ArrayList<>();
@@ -71,8 +71,8 @@ public class VideoController {
         }
 
         System.out.println("videoList Size :" + videoList.size());
-        customResponse.setData(videoList);
-        return customResponse;
+        responseResult.setData(videoList);
+        return responseResult;
     }
 
     /**
@@ -81,9 +81,9 @@ public class VideoController {
      * @return  每次返回新的10条视频，以及其id列表，并标注是否还有更多视频可以获取
      */
     @GetMapping("/video/cumulative/visitor")
-    public CustomResponse cumulativeVideosForVisitor(@RequestParam("vids") String vids) {
+    public ResponseResult cumulativeVideosForVisitor(@RequestParam("vids") String vids) {
         System.out.println("这个函数被调用了,vids的值 : " + vids);
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult responseResult = new ResponseResult();
         Map<String, Object> map = new HashMap<>();
         List<Integer> vidsList = new ArrayList<>();
         if (vids.trim().length() > 0) {
@@ -96,8 +96,8 @@ public class VideoController {
             map.put("videos", new ArrayList<>());
             map.put("vids", new ArrayList<>());
             map.put("more", false);
-            customResponse.setData(map);
-            return customResponse;
+            responseResult.setData(map);
+            return responseResult;
         }
         vidsList.forEach(set::remove);  // 去除已获取的元素
         Set<Object> idSet = new HashSet<>();    // 存放将要返回的id集合
@@ -123,8 +123,8 @@ public class VideoController {
         } else {
             map.put("more", false);
         }
-        customResponse.setData(map);
-        return customResponse;
+        responseResult.setData(map);
+        return responseResult;
     }
 
     /**
@@ -133,30 +133,30 @@ public class VideoController {
      * @return  视频信息
      */
     @GetMapping("/video/getone")
-    public CustomResponse getOneVideo(@RequestParam("vid") Integer vid) {
+    public ResponseResult getOneVideo(@RequestParam("vid") Integer vid) {
         System.out.println(vid);
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult responseResult = new ResponseResult();
         Map<String, Object> map = videoService.getVideoWithDataById(vid);
         if (map == null) {
             System.out.println("map == null");
-            customResponse.setCode(404);
-            customResponse.setMessage("ERROR");
-            return customResponse;
+            responseResult.setCode(404);
+            responseResult.setMessage("ERROR");
+            return responseResult;
         }
         Video video = (Video) map.get("video");
         if (video.getStatus() != 1) {
             System.out.println("video.getStatus()!=1  " + video.getStatus() + vid);
-            customResponse.setCode(404);
-            customResponse.setMessage("ERROR");
-            return customResponse;
+            responseResult.setCode(404);
+            responseResult.setMessage("ERROR");
+            return responseResult;
         }
-        customResponse.setData(map);
-        return customResponse;
+        responseResult.setData(map);
+        return responseResult;
     }
 
     @GetMapping("/video/user-works-count")
-    public CustomResponse getUserWorksCount(@RequestParam("uid") Integer uid) {
-        return new CustomResponse(200, "OK", redisUtil.zCard("user_video_upload:" + uid));
+    public ResponseResult getUserWorksCount(@RequestParam("uid") Integer uid) {
+        return new ResponseResult(200, "OK", redisUtil.zCard("user_video_upload:" + uid));
     }
 
     /**
@@ -168,18 +168,18 @@ public class VideoController {
      * @return  视频信息列表
      */
     @GetMapping("/video/user-works")
-    public CustomResponse getUserWorks(@RequestParam("uid") Integer uid,
+    public ResponseResult getUserWorks(@RequestParam("uid") Integer uid,
                                        @RequestParam("rule") Integer rule,
                                        @RequestParam("page") Integer page,
                                        @RequestParam("quantity") Integer quantity) {
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult responseResult = new ResponseResult();
         Map<String, Object> map = new HashMap<>();
         Set<Object> set = redisUtil.zReverange("user_video_upload:" + uid, 0, -1);
         if (set == null || set.isEmpty()) {
             map.put("count", 0);
             map.put("list", Collections.emptyList());
-            customResponse.setData(map);
-            return customResponse;
+            responseResult.setData(map);
+            return responseResult;
         }
         List<Integer> list = new ArrayList<>();
         set.forEach(vid -> {
@@ -199,8 +199,8 @@ public class VideoController {
             default:
                 map.put("list", videoService.getVideosWithDataByIdsOrderByDesc(list, "upload_date", page, quantity));
         }
-        customResponse.setData(map);
-        return customResponse;
+        responseResult.setData(map);
+        return responseResult;
     }
 
     /**
@@ -211,21 +211,21 @@ public class VideoController {
      * @return  视频信息列表
      */
     @GetMapping("/video/user-love")
-    public CustomResponse getUserLoveMovies(@RequestParam("uid") Integer uid,
+    public ResponseResult getUserLoveMovies(@RequestParam("uid") Integer uid,
                                             @RequestParam("offset") Integer offset,
                                             @RequestParam("quantity") Integer quantity) {
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult responseResult = new ResponseResult();
         Set<Object> set = redisUtil.zReverange("love_video:" + uid, (long) offset, (long) offset + quantity - 1);
         if (set == null || set.isEmpty()) {
-            customResponse.setData(Collections.emptyList());
-            return customResponse;
+            responseResult.setData(Collections.emptyList());
+            return responseResult;
         }
         List<Integer> list = new ArrayList<>();
         set.forEach(vid -> {
             list.add((Integer) vid);
         });
-        customResponse.setData(videoService.getVideosWithDataByIdsOrderByDesc(list, null, 1, list.size()));
-        return customResponse;
+        responseResult.setData(videoService.getVideosWithDataByIdsOrderByDesc(list, null, 1, list.size()));
+        return responseResult;
     }
 
     /**
@@ -235,21 +235,21 @@ public class VideoController {
      * @return  视频信息列表
      */
     @GetMapping("/video/user-play")
-    public CustomResponse getUserPlayMovies(@RequestParam("offset") Integer offset,
+    public ResponseResult getUserPlayMovies(@RequestParam("offset") Integer offset,
                                             @RequestParam("quantity") Integer quantity) {
         Integer uid = currentUser.getUserId();
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult responseResult = new ResponseResult();
         Set<Object> set = redisUtil.zReverange("user_video_history:" + uid, (long) offset, (long) offset + quantity - 1);
         if (set == null || set.isEmpty()) {
-            customResponse.setData(Collections.emptyList());
-            return customResponse;
+            responseResult.setData(Collections.emptyList());
+            return responseResult;
         }
         List<Integer> list = new ArrayList<>();
         set.forEach(vid -> {
             list.add((Integer) vid);
         });
-        customResponse.setData(videoService.getVideosWithDataByIdsOrderByDesc(list, null, 1, list.size()));
-        return customResponse;
+        responseResult.setData(videoService.getVideosWithDataByIdsOrderByDesc(list, null, 1, list.size()));
+        return responseResult;
     }
 
     /**
@@ -261,11 +261,11 @@ public class VideoController {
      * @return  视频信息列表
      */
     @GetMapping("/video/user-collect")
-    public CustomResponse getUserCollectVideos(@RequestParam("fid") Integer fid,
+    public ResponseResult getUserCollectVideos(@RequestParam("fid") Integer fid,
                                                @RequestParam("rule") Integer rule,
                                                @RequestParam("page") Integer page,
                                                @RequestParam("quantity") Integer quantity) {
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult responseResult = new ResponseResult();
         Set<Object> set;
         if (rule == 1) {
             set = redisUtil.zReverange("favorite_video:" + fid, (long) (page - 1) * quantity, (long) page * quantity);
@@ -273,8 +273,8 @@ public class VideoController {
             set = redisUtil.zReverange("favorite_video:" + fid, 0, -1);
         }
         if (set == null || set.isEmpty()) {
-            customResponse.setData(Collections.emptyList());
-            return customResponse;
+            responseResult.setData(Collections.emptyList());
+            return responseResult;
         }
         List<Integer> list = new ArrayList<>();
         set.forEach(vid -> {
@@ -295,8 +295,8 @@ public class VideoController {
                 result = videoService.getVideosWithDataByIdsOrderByDesc(list, null, page, quantity);
         }
         if (result.size() == 0) {
-            customResponse.setData(result);
-            return customResponse;
+            responseResult.setData(result);
+            return responseResult;
         }
         try (SqlSession sqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH)) {
             result.stream().parallel().forEach(map -> {
@@ -307,7 +307,7 @@ public class VideoController {
             });
             sqlSession.commit();
         }
-        customResponse.setData(result);
-        return customResponse;
+        responseResult.setData(result);
+        return responseResult;
     }
 }

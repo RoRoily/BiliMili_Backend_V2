@@ -2,7 +2,7 @@ package com.bilimili.buaa13.service.comment;
 
 import com.bilimili.buaa13.entity.Comment;
 import com.bilimili.buaa13.entity.CommentTree;
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 
 import java.util.List;
 
@@ -11,7 +11,7 @@ public interface CommentService {
 
     CommentTree sendComment(Integer vid, Integer uid, Integer rootId, Integer parentId, Integer toUserId, String content);
 
-    CustomResponse deleteComment(Integer id, Integer uid, boolean isAdmin);
+    ResponseResult deleteComment(Integer id, Integer uid, boolean isAdmin);
 
     List<Comment> getChildCommentsByRootId(Integer rootId, Integer vid, Long start, Long stop);
 

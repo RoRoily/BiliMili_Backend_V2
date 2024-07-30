@@ -17,7 +17,7 @@ public class User {
     private String account;
     private String password;
     private String nickname;
-    private String avatar;
+    private String headPortrait;
     private String background;
     private Integer gender; // 性别，0 女性 1 男性 2无性别，默认2
     private String description;//个人介绍

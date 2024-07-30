@@ -3,7 +3,7 @@ package com.bilimili.buaa13.service.impl.article;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bilimili.buaa13.mapper.ArticleMapper;
 import com.bilimili.buaa13.entity.Article;
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.article.ArticleReviewService;
 import com.bilimili.buaa13.service.article.ArticleService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
@@ -34,16 +34,16 @@ public class ArticleReviewServiceImpl implements ArticleReviewService {
      * @return 包含专栏数量的CustomResponse对象
      */
     @Override
-    public CustomResponse getTotalByStatus(Integer status) {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult getTotalByStatus(Integer status) {
+        ResponseResult responseResult = new ResponseResult();
         if (!currentUser.isAdmin()) {
-            customResponse.setCode(403);
-            customResponse.setMessage("您不是管理员，无权访问");
-            return customResponse;
+            responseResult.setCode(403);
+            responseResult.setMessage("您不是管理员，无权访问");
+            return responseResult;
         }
         Long total = (long) articleMapper.getArticleIdsByStatus(status).size();
-        customResponse.setData(total);
-        return customResponse;
+        responseResult.setData(total);
+        return responseResult;
     }
 
     /**
@@ -55,12 +55,12 @@ public class ArticleReviewServiceImpl implements ArticleReviewService {
      * @return CustomResponse对象，包含符合条件的视频列表
      */
     @Override
-    public CustomResponse getArticlesByPage(Integer status, Integer page, Integer quantity) {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult getArticlesByPage(Integer status, Integer page, Integer quantity) {
+        ResponseResult responseResult = new ResponseResult();
         if (!currentUser.isAdmin()) {
-            customResponse.setCode(403);
-            customResponse.setMessage("您不是管理员，无权访问");
-            return customResponse;
+            responseResult.setCode(403);
+            responseResult.setMessage("您不是管理员，无权访问");
+            return responseResult;
         }
         // 从 redis 获取待审核的专栏id集合，为了提升效率就不遍历数据库了，前提得保证 Redis 没崩，数据一致性采用定时同步或者中间件来保证
         Set<Object> set = redisUtil.getMembers("article_status:" + status);
@@ -73,8 +73,8 @@ public class ArticleReviewServiceImpl implements ArticleReviewService {
         if (!set.isEmpty()) {
             // 如果集合不为空，则在数据库主键查询，并且返回没有被删除的视频
             List<Map<String, Object>> mapList = articleService.getArticlesWithDataByIds(set, page, quantity);
-            customResponse.setData(mapList);
+            responseResult.setData(mapList);
         }
-        return customResponse;
+        return responseResult;
     }
 }

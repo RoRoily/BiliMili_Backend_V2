@@ -38,11 +38,6 @@ public class FollowServiceImpl implements FollowService {
     @Autowired
     private UserRecordService userRecordService;
 
-
-
-
-
-
     /**
      * 根据是否用户本人获取全部可见的关注列表
      * @param uid   用户ID

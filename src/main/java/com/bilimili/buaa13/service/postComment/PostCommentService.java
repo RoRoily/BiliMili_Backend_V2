@@ -8,7 +8,7 @@ public interface PostCommentService {
 
     PostCommentTree sendPostComment(Integer vid, Integer uid, Integer rootId, Integer parentId, Integer toUserId, String content);
 
-    CustomResponse deletePostComment(Integer id, Integer uid, boolean isAdmin);
+    ResponseResult deletePostComment(Integer id, Integer uid, boolean isAdmin);
 
     List<PostComment> getChildPostCommentsByRootId(Integer rootId, Integer vid, Long start, Long stop);
 

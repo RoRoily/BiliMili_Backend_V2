@@ -2,7 +2,7 @@ package com.bilimili.buaa13.service.impl.category;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bilimili.buaa13.mapper.CategoryMapper;
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.dto.CategoryDTO;
 import com.bilimili.buaa13.entity.Category;
 import com.bilimili.buaa13.service.category.CategoryService;
@@ -35,16 +35,16 @@ public class CategoryServiceImpl implements CategoryService {
      * @return CustomResponse对象
      */
     @Override
-    public CustomResponse getAll() {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult getAll() {
+        ResponseResult responseResult = new ResponseResult();
         List<CategoryDTO> sortedCategories = new ArrayList<>();
 
         // 尝试从redis中获取数据
         try {
             sortedCategories = redisUtil.getAllList("categoryList", CategoryDTO.class);
             if (sortedCategories.size() != 0) {
-                customResponse.setData(sortedCategories);
-                return customResponse;
+                responseResult.setData(sortedCategories);
+                return responseResult;
             }
             log.warn("redis中获取不到分区数据");
         } catch (Exception e) {
@@ -108,8 +108,8 @@ public class CategoryServiceImpl implements CategoryService {
         } catch (Exception e) {
             log.error("存储redis分类列表失败");
         }
-        customResponse.setData(sortedCategories);
-        return customResponse;
+        responseResult.setData(sortedCategories);
+        return responseResult;
     }
 
     /**

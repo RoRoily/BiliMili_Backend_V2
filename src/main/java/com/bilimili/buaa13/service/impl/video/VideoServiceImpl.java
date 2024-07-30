@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.mapper.VideoStatsMapper;
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.Video;
 import com.bilimili.buaa13.entity.VideoStats;
 import com.bilimili.buaa13.service.category.CategoryService;
@@ -352,23 +352,23 @@ public class VideoServiceImpl implements VideoService {
      */
     @Override
     @Transactional
-    public CustomResponse updateVideoStatus(Integer vid, Integer status) throws IOException {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult updateVideoStatus(Integer vid, Integer status) throws IOException {
+        ResponseResult responseResult = new ResponseResult();
         Integer userId = currentUser.getUserId();
         if (status == 1 || status == 2) {
             if (!currentUser.isAdmin()) {
-                customResponse.setCode(403);
-                customResponse.setMessage("您不是管理员，无权访问");
-                return customResponse;
+                responseResult.setCode(403);
+                responseResult.setMessage("您不是管理员，无权访问");
+                return responseResult;
             }
             if (status == 1) {
                 QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
                 queryWrapper.eq("vid", vid).ne("status", 3);
                 Video video = videoMapper.selectOne(queryWrapper);
                 if (video == null) {
-                    customResponse.setCode(404);
-                    customResponse.setMessage("视频不见了QAQ");
-                    return customResponse;
+                    responseResult.setCode(404);
+                    responseResult.setMessage("视频不见了QAQ");
+                    return responseResult;
                 }
                 Integer lastStatus = video.getStatus();
                 video.setStatus(1);
@@ -382,12 +382,12 @@ public class VideoServiceImpl implements VideoService {
                     redisUtil.addMember("video_status:1", vid);     // 加入新状态
                     redisUtil.zset("user_video_upload:" + video.getUid(), video.getVid());
                     redisUtil.delValue("video:" + vid);     // 删除旧的视频信息
-                    return customResponse;
+                    return responseResult;
                 } else {
                     // 更新失败，处理错误情况
-                    customResponse.setCode(500);
-                    customResponse.setMessage("更新状态失败");
-                    return customResponse;
+                    responseResult.setCode(500);
+                    responseResult.setMessage("更新状态失败");
+                    return responseResult;
                 }
             }
             else {
@@ -396,9 +396,9 @@ public class VideoServiceImpl implements VideoService {
                 queryWrapper.eq("vid", vid).ne("status", 3);
                 Video video = videoMapper.selectOne(queryWrapper);
                 if (video == null) {
-                    customResponse.setCode(404);
-                    customResponse.setMessage("视频不见了QAQ");
-                    return customResponse;
+                    responseResult.setCode(404);
+                    responseResult.setMessage("视频不见了QAQ");
+                    return responseResult;
                 }
                 Integer lastStatus = video.getStatus();
                 video.setStatus(2);
@@ -412,12 +412,12 @@ public class VideoServiceImpl implements VideoService {
                     redisUtil.addMember("video_status:2", vid);     // 加入新状态
                     redisUtil.zsetDelMember("user_video_upload:" + video.getUid(), video.getVid());
                     redisUtil.delValue("video:" + vid);     // 删除旧的视频信息
-                    return customResponse;
+                    return responseResult;
                 } else {
                     // 更新失败，处理错误情况
-                    customResponse.setCode(500);
-                    customResponse.setMessage("更新状态失败");
-                    return customResponse;
+                    responseResult.setCode(500);
+                    responseResult.setMessage("更新状态失败");
+                    return responseResult;
                 }
             }
         } else if (status == 3) {
@@ -425,9 +425,9 @@ public class VideoServiceImpl implements VideoService {
             queryWrapper.eq("vid", vid).ne("status", 3);
             Video video = videoMapper.selectOne(queryWrapper);
             if (video == null) {
-                customResponse.setCode(404);
-                customResponse.setMessage("视频不见了QAQ");
-                return customResponse;
+                responseResult.setCode(404);
+                responseResult.setMessage("视频不见了QAQ");
+                return responseResult;
             }
             if (Objects.equals(userId, video.getUid()) || currentUser.isAdmin()) {
                 String videoUrl = video.getVideoUrl();
@@ -456,21 +456,21 @@ public class VideoServiceImpl implements VideoService {
                         list.add("comment_video:" + vid);
                         redisUtil.delValues(list);
                     }, taskExecutor);
-                    return customResponse;
+                    return responseResult;
                 } else {
                     // 更新失败，处理错误情况
-                    customResponse.setCode(500);
-                    customResponse.setMessage("更新状态失败");
-                    return customResponse;
+                    responseResult.setCode(500);
+                    responseResult.setMessage("更新状态失败");
+                    return responseResult;
                 }
             } else {
-                customResponse.setCode(403);
-                customResponse.setMessage("您没有权限删除视频");
-                return customResponse;
+                responseResult.setCode(403);
+                responseResult.setMessage("您没有权限删除视频");
+                return responseResult;
             }
         }
-        customResponse.setCode(500);
-        customResponse.setMessage("更新状态失败");
-        return customResponse;
+        responseResult.setCode(500);
+        responseResult.setMessage("更新状态失败");
+        return responseResult;
     }
 }

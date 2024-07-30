@@ -1,7 +1,7 @@
 package com.bilimili.buaa13.controller;
 
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.mapper.FavoriteMapper;
-import com.bilimili.buaa13.entity.CustomResponse;
 import com.bilimili.buaa13.entity.Favorite;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.service.video.FavoriteService;
@@ -40,13 +40,13 @@ public class FavoriteVideoController {
      * @return  收藏了该视频的收藏夹列表
      */
     @GetMapping("/video/collected-fids")
-    public CustomResponse getCollectedFids(@RequestParam("vid") Integer vid) {
+    public ResponseResult getCollectedFids(@RequestParam("vid") Integer vid) {
         Integer uid = currentUser.getUserId();
         Set<Integer> fids = findFidsOfUserFavorites(uid);
         Set<Integer> collectedFids = favoriteVideoService.findFidsOfCollected(vid, fids);
-        CustomResponse customResponse = new CustomResponse();
-        customResponse.setData(collectedFids);
-        return customResponse;
+        ResponseResult responseResult = new ResponseResult();
+        responseResult.setData(collectedFids);
+        return responseResult;
     }
 
     /**
@@ -57,19 +57,19 @@ public class FavoriteVideoController {
      * @return  无数据返回
      */
     @PostMapping("/video/collect")
-    public CustomResponse collectVideo(@RequestParam("vid") Integer vid,
+    public ResponseResult collectVideo(@RequestParam("vid") Integer vid,
                                        @RequestParam("adds") String[] addArray,
                                        @RequestParam("removes") String[] removeArray) {
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult responseResult = new ResponseResult();
         Integer uid = currentUser.getUserId();
         Set<Integer> fids = findFidsOfUserFavorites(uid);
         Set<Integer> addSet = Arrays.stream(addArray).map(Integer::parseInt).collect(Collectors.toSet());
         Set<Integer> removeSet = Arrays.stream(removeArray).map(Integer::parseInt).collect(Collectors.toSet());
         boolean allElementsInFids = fids.containsAll(addSet) && fids.containsAll(removeSet);    // 判断添加或移出的收藏夹是否都属于该用户
         if (!allElementsInFids) {
-            customResponse.setCode(403);
-            customResponse.setMessage("无权操作该收藏夹");
-            return customResponse;
+            responseResult.setCode(403);
+            responseResult.setMessage("无权操作该收藏夹");
+            return responseResult;
         }
         Set<Integer> collectedFids = favoriteVideoService.findFidsOfCollected(vid, fids);   // 原本该用户已收藏该视频的收藏夹ID集合
         if (addSet.size() > 0) {
@@ -85,7 +85,7 @@ public class FavoriteVideoController {
         } else if (isCancel) {
             userVideoService.collectOrCancel(uid, vid, false);
         }
-        return customResponse;
+        return responseResult;
     }
 
     /**
@@ -95,16 +95,16 @@ public class FavoriteVideoController {
      * @return  响应对象
      */
     @PostMapping("/video/cancel-collect")
-    public CustomResponse cancelCollect(@RequestParam("vid") Integer vid, @RequestParam("fid") Integer fid) {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult cancelCollect(@RequestParam("vid") Integer vid, @RequestParam("fid") Integer fid) {
+        ResponseResult responseResult = new ResponseResult();
         Integer uid = currentUser.getUserId();
         Set<Integer> fids = findFidsOfUserFavorites(uid);
         Set<Integer> removeSet = new HashSet<>();
         removeSet.add(fid);
         if (!fids.containsAll(removeSet)) {
-            customResponse.setCode(403);
-            customResponse.setMessage("无权操作该收藏夹");
-            return customResponse;
+            responseResult.setCode(403);
+            responseResult.setMessage("无权操作该收藏夹");
+            return responseResult;
         }
         Set<Integer> collectedFids = favoriteVideoService.findFidsOfCollected(vid, fids);   // 原本该用户已收藏该视频的收藏夹ID集合
         favoriteVideoService.removeFromFav(uid, vid, removeSet);
@@ -113,7 +113,7 @@ public class FavoriteVideoController {
         if (isCancel) {
             userVideoService.collectOrCancel(uid, vid, false);
         }
-        return customResponse;
+        return responseResult;
     }
 
     /**

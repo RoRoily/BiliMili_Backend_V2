@@ -36,11 +36,13 @@ public class CurrentUser {
      */
     public Boolean isAdmin() {
         Integer uid = getUserId();
-        User user = redisUtil.getObject("user:" + uid, User.class);
-        if (user == null) {
-            user = userMapper.selectById(uid);
-            redisUtil.setExObjectValue("user:" + user.getUid(), user);
-        }
+        //注释Redis
+//        User user = redisUtil.getObject("user:" + uid, User.class);
+//        if (user == null) {
+//            user = userMapper.selectById(uid);
+//            redisUtil.setExObjectValue("user:" + user.getUid(), user);
+//        }
+        User user = userMapper.selectById(uid);
         return (user.getRole() == 1 || user.getRole() == 2);
     }
 }

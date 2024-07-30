@@ -1,7 +1,7 @@
 package com.bilimili.buaa13.service.video;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.dto.VideoUploadInfoDTO;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,7 +13,7 @@ public interface VideoUploadService {
      * @param hash 视频的hash值
      * @return CustomResponse对象
      */
-    CustomResponse askCurrentChunk(String hash);
+    ResponseResult askCurrentChunk(String hash);
 
     /**
      * 上传单个视频分片，当前上传到阿里云对象存储
@@ -23,14 +23,14 @@ public interface VideoUploadService {
      * @return  CustomResponse对象
      * @throws IOException
      */
-    CustomResponse uploadChunk(MultipartFile chunk, String hash, Integer index) throws IOException;
+    ResponseResult uploadChunk(MultipartFile chunk, String hash, Integer index) throws IOException;
 
     /**
      * 取消上传并且删除该视频的分片文件
      * @param hash 视频的hash值
      * @return CustomResponse对象
      */
-    CustomResponse cancelUpload(String hash);
+    ResponseResult cancelUpload(String hash);
 
     /**
      * 接收前端提供的视频信息，包括封面文件和稿件的其他信息，保存完封面后将信息发送到消息队列，并返回投稿成功响应
@@ -39,5 +39,5 @@ public interface VideoUploadService {
      * @return  CustomResponse对象
      * @throws JsonProcessingException
      */
-    CustomResponse addVideo(MultipartFile cover, VideoUploadInfoDTO videoUploadInfoDTO) throws IOException;
+    ResponseResult addVideo(MultipartFile cover, VideoUploadInfoDTO videoUploadInfoDTO) throws IOException;
 }

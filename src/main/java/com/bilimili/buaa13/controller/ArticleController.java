@@ -80,11 +80,11 @@ public class ArticleController {
      * @return 无data返回 仅返回响应
      */
     @PostMapping("/article/change/status")
-    public CustomResponse updateStatus(@RequestParam("aid") Integer aid,
+    public ResponseResult updateStatus(@RequestParam("aid") Integer aid,
                                        @RequestParam("status") Integer status) {
         try {
             System.out.println("controller层没问题");
-            CustomResponse customResponse = articleService.updateArticleStatus(aid, status);
+            ResponseResult responseResult = articleService.updateArticleStatus(aid, status);
             System.out.println("updateArticleStatus没问题");
             if(status == 1){
                 System.out.println("Status = 1");
@@ -97,10 +97,10 @@ public class ArticleController {
                 Integer up_id = article.getUid();
                 NoticeHandler.send(up_id,aid);
             }
-            return customResponse;
+            return responseResult;
         } catch (Exception e) {
             e.printStackTrace();
-            return new CustomResponse(500, "操作失败", null);
+            return new ResponseResult(500, "操作失败", null);
         }
     }
     /**
@@ -113,9 +113,9 @@ public class ArticleController {
      * */
     @GetMapping("/article/get")
 
-    public CustomResponse getArticleById(@RequestParam("aid") Integer aid
+    public ResponseResult getArticleById(@RequestParam("aid") Integer aid
                                               ) {
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult responseResult = new ResponseResult();
         Article article = null;
         QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("aid", aid).ne("status", 3);
@@ -124,8 +124,8 @@ public class ArticleController {
             map.put("coverUrl", article.getCoverUrl());
             map.put("contentUrl",article.getContentUrl());
             map.put("title",article.getTitle());
-        customResponse.setData(map);
-        return customResponse;
+        responseResult.setData(map);
+        return responseResult;
     }
 
     /**
@@ -145,16 +145,16 @@ public class ArticleController {
      *
      * */
     @GetMapping("/column/markdown")
-    public CustomResponse getArticleContentByVid(@RequestParam("aid") Integer aid) {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult getArticleContentByVid(@RequestParam("aid") Integer aid) {
+        ResponseResult responseResult = new ResponseResult();
         Article article = null;
         QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("aid", aid).ne("status", 3);
         article = articleMapper.selectOne(queryWrapper);
         if (article == null) {
-            customResponse.setCode(404);
-            customResponse.setMessage("Article not found");
-            return customResponse;
+            responseResult.setCode(404);
+            responseResult.setMessage("Article not found");
+            return responseResult;
         }
         String contentUrl = article.getContentUrl();
         String bucketName = OSS_BUCKET; // 请根据实际情况修改
@@ -178,21 +178,21 @@ public class ArticleController {
             userQueryWrapper.eq("uid", article.getUid());
             User user = userMapper.selectOne(userQueryWrapper);
             map.put("user", user);
-            customResponse.setData(map);
-            customResponse.setCode(200);
-            customResponse.setMessage("Success");
+            responseResult.setData(map);
+            responseResult.setCode(200);
+            responseResult.setMessage("Success");
         } catch (Exception e) {
-            customResponse.setCode(500);
-            customResponse.setMessage("Failed to retrieve content from OSS");
+            responseResult.setCode(500);
+            responseResult.setMessage("Failed to retrieve content from OSS");
         }
 
-        return customResponse;
+        return responseResult;
     }
 
     /*
     @GetMapping("/column/markdown")
-    public CustomResponse getArticleContentByVid(@RequestParam("aid") Integer aid) {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult getArticleContentByVid(@RequestParam("aid") Integer aid) {
+        ResponseResult customResponse = new ResponseResult();
         Article article = null;
         QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("aid", aid).ne("status", 3);
@@ -241,16 +241,16 @@ public class ArticleController {
      * */
     /*
     @GetMapping("/column/favoriteVideo")
-    public CustomResponse favoriteRelatedVideo(@RequestParam("aid") Integer aid
+    public ResponseResult favoriteRelatedVideo(@RequestParam("aid") Integer aid
     ) {
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult customResponse = new ResponseResult();
         Article article = null;
         QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("aid", aid).ne("status", 3);
         article = articleMapper.selectOne(queryWrapper);
         Map<String, Object> map = new HashMap<>();
         if(article == null){
-            return new CustomResponse(500,"未找到文章对应的aid",null);
+            return new ResponseResult(500,"未找到文章对应的aid",null);
         }
         List<Integer> videoList = new ArrayList<>();
         String[] videos = article.getVid().split(",");
@@ -284,18 +284,18 @@ public class ArticleController {
         return customResponse;
     }*/
     @GetMapping("/column/favoriteVideo")
-    public CustomResponse favoriteRelatedVideo(@RequestParam("aid") Integer aid,
+    public ResponseResult favoriteRelatedVideo(@RequestParam("aid") Integer aid,
                                                @RequestParam("uid") Integer uid
     ) {
         System.out.println(aid);
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult responseResult = new ResponseResult();
         Article article = null;
         QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("aid", aid).ne("status", 3);
         article = articleMapper.selectOne(queryWrapper);
         Map<String, Object> map = new HashMap<>();
         if(article == null){
-            return new CustomResponse(500,"未找到文章对应的aid",null);
+            return new ResponseResult(500,"未找到文章对应的aid",null);
         }
         List<Integer> videoList = new ArrayList<>();
         String[] videos = article.getVid().split(",");
@@ -312,9 +312,9 @@ public class ArticleController {
         favoriteQueryWrapper.eq("fid", uid).eq("type", 1);
         Favorite favorite = favoriteMapper.selectOne(favoriteQueryWrapper);
         if(favorite == null){
-            customResponse.setCode(404);
-            customResponse.setMessage("Favorite not found");
-            return customResponse;
+            responseResult.setCode(404);
+            responseResult.setMessage("Favorite not found");
+            return responseResult;
         }
         Set<Integer>addSet = new HashSet<>();
         Integer fid = favorite.getFid();
@@ -328,12 +328,12 @@ public class ArticleController {
             else favoriteVideoService.addToFav(uid,vid,addSet);
         }
         if(flag >= videoList.size()){
-            customResponse.setData(true);
+            responseResult.setData(true);
         }
         else {
-            customResponse.setData(false);
+            responseResult.setData(false);
         }
-        return customResponse;
+        return responseResult;
     }
 
 
@@ -346,16 +346,16 @@ public class ArticleController {
      * */
 /*
     @GetMapping("/column/favoriteVideo")
-    public CustomResponse favoriteRelatedVideo(@RequestParam("aid") Integer aid
+    public ResponseResult favoriteRelatedVideo(@RequestParam("aid") Integer aid
     ) {
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult customResponse = new ResponseResult();
         Article article = null;
         QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("aid", aid).ne("status", 3);
         article = articleMapper.selectOne(queryWrapper);
         Map<String, Object> map = new HashMap<>();
         if(article == null){
-            return new CustomResponse(500,"未找到文章对应的aid",null);
+            return new ResponseResult(500,"未找到文章对应的aid",null);
         }
         List<Integer> videoList = new ArrayList<>();
         String[] videos = article.getVid().split(",");
@@ -375,7 +375,7 @@ public class ArticleController {
         map.put("contentUrl",article.getContentUrl());
         map.put("title",article.getTitle());
         customResponse.setData(map);
-        return new CustomResponse(200,"批量收藏成功",null);
+        return new ResponseResult(200,"批量收藏成功",null);
     }
 */
     /**
@@ -386,7 +386,7 @@ public class ArticleController {
      * @return
      */
     @GetMapping("/article/user-works")
-    public CustomResponse getArticlesByUid(@RequestParam("uid") Integer uid,
+    public ResponseResult getArticlesByUid(@RequestParam("uid") Integer uid,
                                            @RequestParam(value = "page", defaultValue = "1") Integer page,
                                            @RequestParam(value = "quantity", defaultValue = "10") Integer quantity) {
         return articleService.getArticlesByPage(uid, page, quantity);
@@ -398,19 +398,19 @@ public class ArticleController {
      * @param aid 专栏aid
      */
     @GetMapping("/column/video-data")
-    public CustomResponse getAllVideoInfo(@RequestParam("aid") Integer aid){
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult getAllVideoInfo(@RequestParam("aid") Integer aid){
+        ResponseResult responseResult = new ResponseResult();
         Map<String, Object> map = articleService.getArticleWithDataById(aid);
         if (map == null) {
-            customResponse.setCode(404);
-            customResponse.setMessage("ERROR");
-            return customResponse;
+            responseResult.setCode(404);
+            responseResult.setMessage("ERROR");
+            return responseResult;
         }
         Article article = (Article) map.get("article");
         if (article.getStatus() != 1) {
-            customResponse.setCode(405);
-            customResponse.setMessage("ERROR");
-            return customResponse;
+            responseResult.setCode(405);
+            responseResult.setMessage("ERROR");
+            return responseResult;
         }
         String[] vidString = article.getVid().split(",");
         List<Integer> vids = new ArrayList<>();
@@ -439,8 +439,8 @@ public class ArticleController {
         dataMap.put("duration",durations);
         dataMap.put("url",urls);
         dataMap.put("view",playCounts);
-        customResponse.setData(dataMap);
-        return customResponse;
+        responseResult.setData(dataMap);
+        return responseResult;
     }
 
 }

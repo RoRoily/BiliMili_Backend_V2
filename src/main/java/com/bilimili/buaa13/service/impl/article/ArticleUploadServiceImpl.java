@@ -1,7 +1,7 @@
 package com.bilimili.buaa13.service.impl.article;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.mapper.VideoStatsMapper;
-import com.bilimili.buaa13.entity.CustomResponse;
 import com.bilimili.buaa13.entity.dto.ArticleUploadDTO;
 import com.bilimili.buaa13.service.article.ArticleUploadService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
@@ -54,18 +54,18 @@ public class ArticleUploadServiceImpl implements ArticleUploadService {
     private Executor taskExecutor;
 
     @Override
-    public CustomResponse addArticle(/*MultipartFile cover */ArticleUploadDTO articleUploadDTO) throws IOException {
+    public ResponseResult addArticle(/*MultipartFile cover */ArticleUploadDTO articleUploadDTO) throws IOException {
         Integer loginUserId = currentUser.getUserId();
         // 值的判定 虽然前端会判 防止非法请求 不过数据库也写不进去 但会影响封面保存
         /*
         if (articleUploadDTO.getTitle().trim().isEmpty()) {
-            return new CustomResponse(500, "标题不能为空", null);
+            return new ResponseResult(500, "标题不能为空", null);
         }
         if (articleUploadDTO.getTitle().length() > 80) {
-            return new CustomResponse(500, "标题不能超过80字", null);
+            return new ResponseResult(500, "标题不能超过80字", null);
         }
         if (articleUploadDTO.getDescr().length() > 50) {
-            return new CustomResponse(500, "简介太长啦", null);
+            return new ResponseResult(500, "简介太长啦", null);
         }*/
 
         // 保存封面到本地
@@ -107,6 +107,6 @@ public class ArticleUploadServiceImpl implements ArticleUploadService {
             }
         }, taskExecutor);
 
-        return new CustomResponse();
+        return new ResponseResult();
     }
 }

@@ -1,6 +1,6 @@
 package com.bilimili.buaa13.controller;
 
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.Danmu;
 import com.bilimili.buaa13.service.danmu.DanmuService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
@@ -28,12 +28,12 @@ public class DanmuController {
      * @return  CustomResponse对象
      */
     @GetMapping("/danmu-list/{vid}")
-    public CustomResponse getDanmuList(@PathVariable("vid") String vid) {
+    public ResponseResult getDanmuList(@PathVariable("vid") String vid) {
         Set<Object> idset = redisUtil.getMembers("danmu_idset:" + vid);
         List<Danmu> danmuList = danmuService.getDanmuListByIdset(idset);
-        CustomResponse customResponse = new CustomResponse();
-        customResponse.setData(danmuList);
-        return customResponse;
+        ResponseResult responseResult = new ResponseResult();
+        responseResult.setData(danmuList);
+        return responseResult;
     }
 
     /**
@@ -42,7 +42,7 @@ public class DanmuController {
      * @return  响应对象
      */
     @PostMapping("/danmu/delete")
-    public CustomResponse deleteDanmu(@RequestParam("id") Integer id) {
+    public ResponseResult deleteDanmu(@RequestParam("id") Integer id) {
         Integer loginUid = currentUser.getUserId();
         return danmuService.deleteDanmu(id, loginUid, currentUser.isAdmin());
     }

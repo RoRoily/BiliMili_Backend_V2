@@ -1,6 +1,6 @@
 package com.bilimili.buaa13.controller;
 
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.message.ChatDetailedService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +24,12 @@ public class ChatDetailedController {
      * @return  CustomResponse对象，包含更多消息记录的map
      */
     @GetMapping("/msg/chat-detailed/get-more")
-    public CustomResponse getMoreChatDetails(@RequestParam("uid") Integer uid,
+    public ResponseResult getMoreChatDetails(@RequestParam("uid") Integer uid,
                                              @RequestParam("offset") Long offset) {
         Integer loginUid = currentUser.getUserId();
-        CustomResponse customResponse = new CustomResponse();
-        customResponse.setData(chatDetailedService.getDetails(uid, loginUid, offset));
-        return customResponse;
+        ResponseResult responseResult = new ResponseResult();
+        responseResult.setData(chatDetailedService.getDetails(uid, loginUid, offset));
+        return responseResult;
     }
 
     /**
@@ -38,13 +38,13 @@ public class ChatDetailedController {
      * @return  CustomResponse对象
      */
     @PostMapping("/msg/chat-detailed/delete")
-    public CustomResponse delDetail(@RequestParam("id") Integer id) {
+    public ResponseResult delDetail(@RequestParam("id") Integer id) {
         Integer loginUid = currentUser.getUserId();
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult responseResult = new ResponseResult();
         if (!chatDetailedService.deleteDetail(id, loginUid)) {
-            customResponse.setCode(500);
-            customResponse.setMessage("删除消息失败");
+            responseResult.setCode(500);
+            responseResult.setMessage("删除消息失败");
         }
-        return customResponse;
+        return responseResult;
     }
 }

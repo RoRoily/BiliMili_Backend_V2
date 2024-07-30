@@ -127,12 +127,12 @@ public class ArticleServiceImpl implements ArticleService {
      * @return CustomResponse对象，包含符合条件的视频列表
      */
     @Override
-    public CustomResponse getArticlesByPage(Integer uid, Integer page, Integer quantity) {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult getArticlesByPage(Integer uid, Integer page, Integer quantity) {
+        ResponseResult responseResult = new ResponseResult();
         /*if (!currentUser.isAdmin()) {
-            customResponse.setCode(403);
-            customResponse.setMessage("您不是管理员，无权访问");
-            return customResponse;
+            responseResult.setCode(403);
+            responseResult.setMessage("您不是管理员，无权访问");
+            return responseResult;
         }*/
         // 从 redis 获取待审核的专栏id集合，为了提升效率就不遍历数据库了，前提得保证 Redis 没崩，数据一致性采用定时同步或者中间件来保证
         Set<Object> set = redisUtil.getMembers("article_uid:" + uid);
@@ -150,8 +150,8 @@ public class ArticleServiceImpl implements ArticleService {
             map.put("list", mapList);
         }
         else map.put("count", 0);
-        customResponse.setData(map);
-        return customResponse;
+        responseResult.setData(map);
+        return responseResult;
     }
 
     @Override
@@ -222,23 +222,23 @@ public class ArticleServiceImpl implements ArticleService {
      */
 
     @Override
-    public CustomResponse updateArticleStatus(Integer aid, Integer status) throws IOException {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult updateArticleStatus(Integer aid, Integer status) throws IOException {
+        ResponseResult responseResult = new ResponseResult();
         Integer userId = currentUser.getUserId();
         if (status == 1 || status == 2) {
             if (!currentUser.isAdmin()) {
-                customResponse.setCode(403);
-                customResponse.setMessage("您不是管理员，无权访问");
-                return customResponse;
+                responseResult.setCode(403);
+                responseResult.setMessage("您不是管理员，无权访问");
+                return responseResult;
             }
             if (status == 1) {
                 QueryWrapper<Article> queryWrapper = new QueryWrapper<>();
                 queryWrapper.eq("aid", aid).ne("status", 3);
                 Article article   = articleMapper.selectOne(queryWrapper);
                 if (article == null) {
-                    customResponse.setCode(404);
-                    customResponse.setMessage("文章不见了");
-                    return customResponse;
+                    responseResult.setCode(404);
+                    responseResult.setMessage("文章不见了");
+                    return responseResult;
                 }
                 Integer lastStatus = article.getStatus();
                 article.setStatus(1);
@@ -252,12 +252,12 @@ public class ArticleServiceImpl implements ArticleService {
                     redisUtil.addMember("article_status:1", aid);     // 加入新状态
                     redisUtil.zset("user_article_upload:" + article.getUid(), article.getAid());
                     redisUtil.delValue("article:" + aid);     // 删除旧的视频信息
-                    return customResponse;
+                    return responseResult;
                 } else {
                     // 更新失败，处理错误情况
-                    customResponse.setCode(500);
-                    customResponse.setMessage("更新状态失败");
-                    return customResponse;
+                    responseResult.setCode(500);
+                    responseResult.setMessage("更新状态失败");
+                    return responseResult;
                 }
             }
             else {
@@ -266,9 +266,9 @@ public class ArticleServiceImpl implements ArticleService {
                 queryWrapper.eq("aid", aid).ne("status", 3);
                 Article article = articleMapper.selectOne(queryWrapper);
                 if (article == null) {
-                    customResponse.setCode(404);
-                    customResponse.setMessage("视频不见了QAQ");
-                    return customResponse;
+                    responseResult.setCode(404);
+                    responseResult.setMessage("视频不见了QAQ");
+                    return responseResult;
                 }
                 Integer lastStatus = article.getStatus();
                 article.setStatus(2);
@@ -282,12 +282,12 @@ public class ArticleServiceImpl implements ArticleService {
                     redisUtil.addMember("article_status:2", aid);     // 加入新状态
                     redisUtil.zsetDelMember("user_article_upload:" + article.getUid(), article.getAid());
                     redisUtil.delValue("article:" + aid);     // 删除旧的视频信息
-                    return customResponse;
+                    return responseResult;
                 } else {
                     // 更新失败，处理错误情况
-                    customResponse.setCode(500);
-                    customResponse.setMessage("更新状态失败");
-                    return customResponse;
+                    responseResult.setCode(500);
+                    responseResult.setMessage("更新状态失败");
+                    return responseResult;
                 }
             }
         } else if (status == 3) {
@@ -295,9 +295,9 @@ public class ArticleServiceImpl implements ArticleService {
             queryWrapper.eq("aid", aid).ne("status", 3);
             Article article = articleMapper.selectOne(queryWrapper);
             if (article == null) {
-                customResponse.setCode(404);
-                customResponse.setMessage("视频不见了QAQ");
-                return customResponse;
+                responseResult.setCode(404);
+                responseResult.setMessage("视频不见了QAQ");
+                return responseResult;
             }
             if (Objects.equals(userId, article.getUid()) || currentUser.isAdmin()) {
                 String contentUrl = article.getContentUrl();
@@ -326,22 +326,22 @@ public class ArticleServiceImpl implements ArticleService {
                         list.add("comment_article:" + aid);
                         redisUtil.delValues(list);
                     }, taskExecutor);
-                    return customResponse;
+                    return responseResult;
                 } else {
                     // 更新失败，处理错误情况
-                    customResponse.setCode(500);
-                    customResponse.setMessage("更新状态失败");
-                    return customResponse;
+                    responseResult.setCode(500);
+                    responseResult.setMessage("更新状态失败");
+                    return responseResult;
                 }
             } else {
-                customResponse.setCode(403);
-                customResponse.setMessage("您没有权限删除视频");
-                return customResponse;
+                responseResult.setCode(403);
+                responseResult.setMessage("您没有权限删除视频");
+                return responseResult;
             }
         }
-        customResponse.setCode(500);
-        customResponse.setMessage("更新状态失败");
-        return customResponse;
+        responseResult.setCode(500);
+        responseResult.setMessage("更新状态失败");
+        return responseResult;
     }
 
 
@@ -450,8 +450,8 @@ public class ArticleServiceImpl implements ArticleService {
     /*
     @Override
     @Transactional
-    public CustomResponse updateArticleStatus(Integer aid, Integer status) throws IOException {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult updateArticleStatus(Integer aid, Integer status) throws IOException {
+        ResponseResult customResponse = new ResponseResult();
         Integer userId = currentUser.getUserId();
         if (status == 1 || status == 2) {
             if (!currentUser.isAdmin()) {

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.bilimili.buaa13.mapper.FavoriteVideoMapper;
 import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.mapper.VideoStatsMapper;
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.Video;
 import com.bilimili.buaa13.entity.VideoStats;
 import com.bilimili.buaa13.service.utils.CurrentUser;
@@ -43,8 +43,8 @@ public class HistoryController {
      * @param uid   用户uid
      */
     @GetMapping("/Record/Video")
-    public CustomResponse getRecordVideoByUid(@RequestParam("uid") Integer uid) {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult getRecordVideoByUid(@RequestParam("uid") Integer uid) {
+        ResponseResult responseResult = new ResponseResult();
         int fid = 5000+uid;
         List<Integer> vids = favoriteVideoMapper.getVidByFid(fid);
         List<Date> times = favoriteVideoMapper.getTimeByFid(fid);
@@ -71,7 +71,7 @@ public class HistoryController {
         dataMap.put("url",urls);
         dataMap.put("view",playCounts);
         dataMap.put("time",times);
-        customResponse.setData(dataMap);
-        return customResponse;
+        responseResult.setData(dataMap);
+        return responseResult;
     }
 }

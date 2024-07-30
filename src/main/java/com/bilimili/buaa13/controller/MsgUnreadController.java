@@ -1,6 +1,6 @@
 package com.bilimili.buaa13.controller;
 
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.message.MsgUnreadService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,11 +22,11 @@ public class MsgUnreadController {
      * @return
      */
     @GetMapping("/msg-unread/all")
-    public CustomResponse getMsgUnread() {
+    public ResponseResult getMsgUnread() {
         Integer uid = currentUser.getUserId();
-        CustomResponse customResponse = new CustomResponse();
-        customResponse.setData(msgUnreadService.getUnread(uid));
-        return customResponse;
+        ResponseResult responseResult = new ResponseResult();
+        responseResult.setData(msgUnreadService.getUnread(uid));
+        return responseResult;
     }
 
     /**

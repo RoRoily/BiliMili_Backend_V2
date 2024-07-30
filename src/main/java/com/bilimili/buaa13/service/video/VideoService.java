@@ -1,6 +1,6 @@
 package com.bilimili.buaa13.service.video;
 
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -50,5 +50,5 @@ public interface VideoService {
      * @param status 要修改的状态，1通过 2不通过 3删除
      * @return 无data返回，仅返回响应信息
      */
-    CustomResponse updateVideoStatus(Integer vid, Integer status) throws IOException;
+    ResponseResult updateVideoStatus(Integer vid, Integer status) throws IOException;
 }

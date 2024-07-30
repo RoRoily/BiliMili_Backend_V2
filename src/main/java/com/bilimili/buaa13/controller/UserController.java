@@ -1,6 +1,6 @@
 package com.bilimili.buaa13.controller;
 
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,18 +26,18 @@ public class UserController {
      * @return
      */
     @PostMapping("/user/info/update")
-    public CustomResponse updateUserInfo(@RequestParam("nickname") String nickname,
+    public ResponseResult updateUserInfo(@RequestParam("nickname") String nickname,
                                          @RequestParam("description") String desc,
                                          @RequestParam("gender") Integer gender) {
         Integer uid = currentUser.getUserId();
         try {
-            return userService.updateUserInfo(uid, nickname, desc, gender);
+            return userService.updateUserInformation(uid, nickname, desc, gender);
         } catch (Exception e) {
             e.printStackTrace();
-            CustomResponse customResponse = new CustomResponse();
-            customResponse.setCode(500);
-            customResponse.setMessage("ERROR");
-            return customResponse;
+            ResponseResult responseResult = new ResponseResult();
+            responseResult.setCode(500);
+            responseResult.setMessage("ERROR");
+            return responseResult;
         }
     }
 
@@ -47,20 +47,20 @@ public class UserController {
      * @return  成功则返回新头像url
      */
     @PostMapping("/user/avatar/update")
-    public CustomResponse updateUserAvatar(@RequestParam("file") MultipartFile file) {
+    public ResponseResult updateUserAvatar(@RequestParam("file") MultipartFile file) {
         Integer uid = currentUser.getUserId();
         try {
-            return userService.updateUserAvatar(uid, file);
+            return userService.updateUserHeadPortrait(uid, file);
         } catch (Exception e) {
             e.printStackTrace();
-            return new CustomResponse(500, "头像更新失败", null);
+            return new ResponseResult(500, "头像更新失败", null);
         }
     }
 
     @GetMapping("/user/info/get-one")
-    public CustomResponse getOneUserInfo(@RequestParam("uid") Integer uid) {
-        CustomResponse customResponse = new CustomResponse();
-        customResponse.setData(userService.getUserByUId(uid));
-        return customResponse;
+    public ResponseResult getOneUserInfo(@RequestParam("uid") Integer uid) {
+        ResponseResult responseResult = new ResponseResult();
+        responseResult.setData(userService.getUserByUId(uid));
+        return responseResult;
     }
 }

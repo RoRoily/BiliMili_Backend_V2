@@ -1,6 +1,6 @@
 package com.bilimili.buaa13.controller;
 
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.article.ArticleReviewService;
 import com.bilimili.buaa13.service.article.ArticleService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
@@ -24,7 +24,7 @@ public class ArticleReviewController {
      *
      */
     @GetMapping("/review/article/total")
-    public CustomResponse getTotalArticle(@RequestParam("astatus") Integer status) {
+    public ResponseResult getTotalArticle(@RequestParam("astatus") Integer status) {
         return articleReviewService.getTotalByStatus(status);
     }
 
@@ -36,9 +36,9 @@ public class ArticleReviewController {
      * @return
      */
     @GetMapping("/review/article/getpage")
-    public CustomResponse getArticles(@RequestParam("astatus") Integer status,
-                                    @RequestParam(value = "page", defaultValue = "1") Integer page,
-                                    @RequestParam(value = "quantity", defaultValue = "10") Integer quantity) {
+    public ResponseResult getArticles(@RequestParam("astatus") Integer status,
+                                      @RequestParam(value = "page", defaultValue = "1") Integer page,
+                                      @RequestParam(value = "quantity", defaultValue = "10") Integer quantity) {
         return articleReviewService.getArticlesByPage(status, page, quantity);
     }
 
@@ -48,15 +48,15 @@ public class ArticleReviewController {
      * @return
      */
     @GetMapping("/review/article/getone")
-    public CustomResponse getOneArticle(@RequestParam("aid") Integer aid) {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult getOneArticle(@RequestParam("aid") Integer aid) {
+        ResponseResult responseResult = new ResponseResult();
         if (!currentUser.isAdmin()) {
-            customResponse.setCode(403);
-            customResponse.setMessage("您不是管理员，无权访问");
-            return customResponse;
+            responseResult.setCode(403);
+            responseResult.setMessage("您不是管理员，无权访问");
+            return responseResult;
         }
         Map<String, Object> map = articleService.getArticleWithDataById(aid);
-        customResponse.setData(map);    // 如果是是空照样返回，前端自动处理
-        return customResponse;
+        responseResult.setData(map);    // 如果是是空照样返回，前端自动处理
+        return responseResult;
     }
 }

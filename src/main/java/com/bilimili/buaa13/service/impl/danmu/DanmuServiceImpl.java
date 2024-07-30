@@ -2,9 +2,9 @@ package com.bilimili.buaa13.service.impl.danmu;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.mapper.DanmuMapper;
 import com.bilimili.buaa13.mapper.VideoMapper;
-import com.bilimili.buaa13.entity.CustomResponse;
 import com.bilimili.buaa13.entity.Danmu;
 import com.bilimili.buaa13.entity.Video;
 import com.bilimili.buaa13.service.danmu.DanmuService;
@@ -50,15 +50,15 @@ public class DanmuServiceImpl implements DanmuService {
 
     @Override
     @Transactional
-    public CustomResponse deleteDanmu(Integer id, Integer uid, boolean isAdmin) {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult deleteDanmu(Integer id, Integer uid, boolean isAdmin) {
+        ResponseResult responseResult = new ResponseResult();
         QueryWrapper<Danmu> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("id", id).ne("state", 3);
         Danmu danmu = danmuMapper.selectOne(queryWrapper);
         if (danmu == null) {
-            customResponse.setCode(404);
-            customResponse.setMessage("弹幕不存在");
-            return customResponse;
+            responseResult.setCode(404);
+            responseResult.setMessage("弹幕不存在");
+            return responseResult;
         }
         // 判断该用户是否有权限删除这条评论
         Video video = videoMapper.selectById(danmu.getVid());
@@ -70,9 +70,9 @@ public class DanmuServiceImpl implements DanmuService {
             videoStatsService.updateStats(danmu.getVid(), "danmu", false, 1);
             redisUtil.delMember("danmu_idset:" + danmu.getVid(), id);
         } else {
-            customResponse.setCode(403);
-            customResponse.setMessage("你无权删除该条评论");
+            responseResult.setCode(403);
+            responseResult.setMessage("你无权删除该条评论");
         }
-        return customResponse;
+        return responseResult;
     }
 }

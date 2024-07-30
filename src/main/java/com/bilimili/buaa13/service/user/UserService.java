@@ -1,6 +1,6 @@
 package com.bilimili.buaa13.service.user;
 
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.dto.UserDTO;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,7 +20,7 @@ public interface UserService {
      * @param list 用户id列表
      * @return  用户信息列表
      */
-    List<UserDTO> getUserByIdList(List<Integer> list);
+    List<UserDTO> getUserByUIdList(List<Integer> list);
 
     /**
      * 更新用户个人信息
@@ -30,13 +30,13 @@ public interface UserService {
      * @param gender    性别： 0 女 1 男 2 双性人
      * @return  响应对象
      */
-    CustomResponse updateUserInfo(Integer uid, String nickname, String desc, Integer gender) throws IOException;
+    ResponseResult updateUserInformation(Integer uid, String nickname, String desc, Integer gender) throws IOException;
 
     /**
      * 更新用户头像
-     * @param uid
-     * @param file
-     * @return
+     * @param uid 用户id
+     * @param file 图像文件
+     * @return 响应
      */
-    CustomResponse updateUserAvatar(Integer uid, MultipartFile file) throws IOException;
+    ResponseResult updateUserHeadPortrait(Integer uid, MultipartFile file) throws IOException;
 }

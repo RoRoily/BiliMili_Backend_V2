@@ -1,6 +1,6 @@
 package com.bilimili.buaa13.service.danmu;
 
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.Danmu;
 
 import java.util.List;
@@ -21,5 +21,5 @@ public interface DanmuService {
      * @param isAdmin   是否管理员
      * @return  响应对象
      */
-    CustomResponse deleteDanmu(Integer id, Integer uid, boolean isAdmin);
+    ResponseResult deleteDanmu(Integer id, Integer uid, boolean isAdmin);
 }

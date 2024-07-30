@@ -1,7 +1,7 @@
 package com.bilimili.buaa13.service.impl.video;
 
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.mapper.VideoMapper;
-import com.bilimili.buaa13.entity.CustomResponse;
 import com.bilimili.buaa13.service.category.CategoryService;
 import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
@@ -46,16 +46,16 @@ public class VideoReviewServiceImpl implements VideoReviewService {
      * @return 包含视频数量的CustomResponse对象
      */
     @Override
-    public CustomResponse getTotalByStatus(Integer status) {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult getTotalByStatus(Integer status) {
+        ResponseResult responseResult = new ResponseResult();
         if (!currentUser.isAdmin()) {
-            customResponse.setCode(403);
-            customResponse.setMessage("您不是管理员，无权访问");
-            return customResponse;
+            responseResult.setCode(403);
+            responseResult.setMessage("您不是管理员，无权访问");
+            return responseResult;
         }
         Long total = redisUtil.scard("video_status:" + status);
-        customResponse.setData(total);
-        return customResponse;
+        responseResult.setData(total);
+        return responseResult;
     }
 
     /**
@@ -63,20 +63,20 @@ public class VideoReviewServiceImpl implements VideoReviewService {
      * @return CustomResponse对象，包含符合条件的视频列表
      */
     @Override
-    public CustomResponse getVideosByPage(Integer status, Integer page, Integer quantity) {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult getVideosByPage(Integer status, Integer page, Integer quantity) {
+        ResponseResult responseResult = new ResponseResult();
         if (!currentUser.isAdmin()) {
-            customResponse.setCode(403);
-            customResponse.setMessage("您不是管理员，无权访问");
-            return customResponse;
+            responseResult.setCode(403);
+            responseResult.setMessage("您不是管理员，无权访问");
+            return responseResult;
         }
         // 从 redis 获取待审核的视频id集合，为了提升效率就不遍历数据库了，前提得保证 Redis 没崩，数据一致性采用定时同步或者中间件来保证
         Set<Object> set = redisUtil.getMembers("video_status:" + status);
         if (set != null && set.size() != 0) {
             // 如果集合不为空，则在数据库主键查询，并且返回没有被删除的视频
             List<Map<String, Object>> mapList = videoService.getVideosWithDataByIds(set, page, quantity);
-            customResponse.setData(mapList);
+            responseResult.setData(mapList);
         }
-        return customResponse;
+        return responseResult;
     }
 }

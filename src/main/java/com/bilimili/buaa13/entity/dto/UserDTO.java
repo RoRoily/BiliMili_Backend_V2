@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class UserDTO {
     private Integer uid;
     private String nickname;
-    private String avatar_url;
+    private String headPortrait_url;
     private String background_url;
     private Integer gender; // 性别，0 女性 1 男性 2无性别，默认2
     private String description;

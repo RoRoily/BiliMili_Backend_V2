@@ -1,7 +1,7 @@
 package com.bilimili.buaa13.service.article;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.dto.ArticleUploadDTO;
 
 import java.io.IOException;
@@ -13,6 +13,6 @@ public interface ArticleUploadService {
      * @return  CustomResponse对象
      * @throws JsonProcessingException
      */
-    CustomResponse addArticle(/*MultipartFile cover,*/ ArticleUploadDTO articleUploadDTO) throws IOException;
+    ResponseResult addArticle(/*MultipartFile cover,*/ ArticleUploadDTO articleUploadDTO) throws IOException;
 }
 

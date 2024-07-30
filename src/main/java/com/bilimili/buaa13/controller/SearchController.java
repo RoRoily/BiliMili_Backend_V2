@@ -1,6 +1,6 @@
 package com.bilimili.buaa13.controller;
 
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.search.SearchService;
 import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.service.video.VideoService;
@@ -35,10 +35,10 @@ public class SearchController {
      * @return  热搜列表
      */
     @GetMapping("/search/hot/get")
-    public CustomResponse getHotSearch() {
-        CustomResponse customResponse = new CustomResponse();
-        customResponse.setData(searchService.getHotSearch());
-        return customResponse;
+    public ResponseResult getHotSearch() {
+        ResponseResult responseResult = new ResponseResult();
+        responseResult.setData(searchService.getHotSearch());
+        return responseResult;
     }
 
     /**
@@ -47,10 +47,10 @@ public class SearchController {
      * @return  返回格式化后的搜索词，有可能为null
      */
     @PostMapping("/search/word/add")
-    public CustomResponse addSearchWord(@RequestParam("keyword") String keyword) {
-        CustomResponse customResponse = new CustomResponse();
-        customResponse.setData(searchService.addSearchWord(keyword));
-        return customResponse;
+    public ResponseResult addSearchWord(@RequestParam("keyword") String keyword) {
+        ResponseResult responseResult = new ResponseResult();
+        responseResult.setData(searchService.addSearchWord(keyword));
+        return responseResult;
     }
 
     /**
@@ -59,15 +59,15 @@ public class SearchController {
      * @return  包含推荐搜索词的列表
      */
     @GetMapping("/search/word/get")
-    public CustomResponse getSearchWord(@RequestParam("keyword") String keyword) throws UnsupportedEncodingException {
+    public ResponseResult getSearchWord(@RequestParam("keyword") String keyword) throws UnsupportedEncodingException {
         keyword = URLDecoder.decode(keyword, "UTF-8");  // 解码经过url传输的字符串
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult responseResult = new ResponseResult();
         if (keyword.trim().length() == 0) {
-            customResponse.setData(Collections.emptyList());
+            responseResult.setData(Collections.emptyList());
         } else {
-            customResponse.setData(searchService.getMatchingWord(keyword));
+            responseResult.setData(searchService.getMatchingWord(keyword));
         }
-        return customResponse;
+        return responseResult;
     }
 
     /**
@@ -76,11 +76,11 @@ public class SearchController {
      * @return  包含视频数量和用户数量的顺序列表
      */
     @GetMapping("/search/count")
-    public CustomResponse getCount(@RequestParam("keyword") String keyword) throws UnsupportedEncodingException {
+    public ResponseResult getCount(@RequestParam("keyword") String keyword) throws UnsupportedEncodingException {
         keyword = URLDecoder.decode(keyword, "UTF-8");  // 解码经过url传输的字符串
-        CustomResponse customResponse = new CustomResponse();
-        customResponse.setData(searchService.getCount(keyword));
-        return customResponse;
+        ResponseResult responseResult = new ResponseResult();
+        responseResult.setData(searchService.getCount(keyword));
+        return responseResult;
     }
 
     /**
@@ -91,20 +91,20 @@ public class SearchController {
      * @throws UnsupportedEncodingException
      */
     @GetMapping("/search/video/only-pass")
-    public CustomResponse getMatchingVideo(@RequestParam("keyword") String keyword, @RequestParam("page") Integer page) throws UnsupportedEncodingException {
+    public ResponseResult getMatchingVideo(@RequestParam("keyword") String keyword, @RequestParam("page") Integer page) throws UnsupportedEncodingException {
         keyword = URLDecoder.decode(keyword, "UTF-8");  // 解码经过url传输的字符串
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult responseResult = new ResponseResult();
         List<Integer> vids = esUtil.searchVideosByKeyword(keyword, page, 30, true);
-        customResponse.setData(videoService.getVideosWithDataByIdList(vids));
-        return customResponse;
+        responseResult.setData(videoService.getVideosWithDataByIdList(vids));
+        return responseResult;
     }
 
     @GetMapping("/search/user")
-    public CustomResponse getMatchingUser(@RequestParam("keyword") String keyword, @RequestParam("page") Integer page) throws UnsupportedEncodingException {
+    public ResponseResult getMatchingUser(@RequestParam("keyword") String keyword, @RequestParam("page") Integer page) throws UnsupportedEncodingException {
         keyword = URLDecoder.decode(keyword, "UTF-8");  // 解码经过url传输的字符串
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult responseResult = new ResponseResult();
         List<Integer> uids = esUtil.searchUsersByKeyword(keyword, page, 30);
-        customResponse.setData(userService.getUserByIdList(uids));
-        return customResponse;
+        responseResult.setData(userService.getUserByUIdList(uids));
+        return responseResult;
     }
 }

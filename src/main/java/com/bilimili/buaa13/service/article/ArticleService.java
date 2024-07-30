@@ -1,7 +1,7 @@
 package com.bilimili.buaa13.service.article;
 
 import java.util.Map;
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,10 +24,10 @@ public interface ArticleService {
      * @param status 要修改的状态，1通过 2不通过 3删除
      * @return 无data返回，仅返回响应信息
      */
-    CustomResponse updateArticleStatus(Integer aid, Integer status) throws IOException;
+    ResponseResult updateArticleStatus(Integer aid, Integer status) throws IOException;
 
 
     public List<Map<String, Object>> getArticlesWithDataByIds(Set<Object> set, Integer index, Integer quantity);
 
-    public CustomResponse getArticlesByPage(Integer uid, Integer page, Integer quantity);
+    public ResponseResult getArticlesByPage(Integer uid, Integer page, Integer quantity);
 }

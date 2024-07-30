@@ -1,10 +1,10 @@
 package com.bilimili.buaa13.service.impl.record;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.bilimili.buaa13.mapper.UserMapper;
 import com.bilimili.buaa13.mapper.UserRecordStringMapper;
-import com.bilimili.buaa13.entity.CustomResponse;
 import com.bilimili.buaa13.entity.UserRecord;
 import com.bilimili.buaa13.entity.UserRecordString;
 import com.bilimili.buaa13.service.record.UserRecordService;
@@ -132,7 +132,7 @@ public class UserRecordServiceImpl implements UserRecordService {
             }
         }catch (Exception e){
             e.printStackTrace();
-            new CustomResponse(404,"未找到记录",null);
+            new ResponseResult(404,"未找到记录",null);
         }
         /*if(userRecord == null){
             try{

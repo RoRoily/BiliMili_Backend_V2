@@ -1,6 +1,6 @@
 package com.bilimili.buaa13.controller;
 
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.service.video.FavoriteService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,15 +25,15 @@ public class FavoriteController {
      * @return  包含收藏夹列表的响应对象
      */
     @GetMapping("/favorite/get-all/user")
-    public CustomResponse getAllFavoritiesForUser(@RequestParam("uid") Integer uid) {
+    public ResponseResult getAllFavoritiesForUser(@RequestParam("uid") Integer uid) {
         Integer loginUid = currentUser.getUserId();
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult responseResult = new ResponseResult();
         if (Objects.equals(loginUid, uid)) {
-            customResponse.setData(favoriteService.getFavorites(uid, true));
+            responseResult.setData(favoriteService.getFavorites(uid, true));
         } else {
-            customResponse.setData(favoriteService.getFavorites(uid, false));
+            responseResult.setData(favoriteService.getFavorites(uid, false));
         }
-        return customResponse;
+        return responseResult;
     }
 
     /**
@@ -42,10 +42,10 @@ public class FavoriteController {
      * @return  包含收藏夹列表的响应对象
      */
     @GetMapping("/favorite/get-all/visitor")
-    public CustomResponse getAllFavoritiesForVisitor(@RequestParam("uid") Integer uid) {
-        CustomResponse customResponse = new CustomResponse();
-        customResponse.setData(favoriteService.getFavorites(uid, false));
-        return customResponse;
+    public ResponseResult getAllFavoritiesForVisitor(@RequestParam("uid") Integer uid) {
+        ResponseResult responseResult = new ResponseResult();
+        responseResult.setData(favoriteService.getFavorites(uid, false));
+        return responseResult;
     }
 
     /**
@@ -56,12 +56,12 @@ public class FavoriteController {
      * @return  包含新创建的收藏夹信息的响应对象
      */
     @PostMapping("/favorite/create")
-    public CustomResponse createFavorite(@RequestParam("title") String title,
+    public ResponseResult createFavorite(@RequestParam("title") String title,
                                          @RequestParam("desc") String desc,
                                          @RequestParam("visible") Integer visible) {
         Integer uid = currentUser.getUserId();
-        CustomResponse customResponse = new CustomResponse();
-        customResponse.setData(favoriteService.addFavorite(uid, title, desc, visible));
-        return customResponse;
+        ResponseResult responseResult = new ResponseResult();
+        responseResult.setData(favoriteService.addFavorite(uid, title, desc, visible));
+        return responseResult;
     }
 }

@@ -1,8 +1,8 @@
 package com.bilimili.buaa13.controller;
 
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.mapper.ArticleMapper;
 import com.bilimili.buaa13.mapper.PostMapper;
-import com.bilimili.buaa13.entity.CustomResponse;
 import com.bilimili.buaa13.entity.Post;
 import com.bilimili.buaa13.entity.PostTree;
 import com.bilimili.buaa13.service.article.ArticleUploadService;
@@ -42,7 +42,7 @@ public class PostController {
      * @return  响应对象
      */
     @PostMapping("/post/add")
-    public CustomResponse addAllArticle(
+    public ResponseResult addAllArticle(
             @RequestParam("uid") Integer uid,
             @RequestParam("content") String content
             //@RequestParam("cover") MultipartFile cover,
@@ -67,20 +67,20 @@ public class PostController {
             System.out.println("uid: " + uid +  "content : "+ content );
             postMapper.insert(post);
                 //return articleUploadService.addArticle(articleUploadDTO)
-            return new CustomResponse(200,"动态发布成功",post.getPid().toString());
+            return new ResponseResult(200,"动态发布成功",post.getPid().toString());
         } catch (Exception e) {
             e.printStackTrace();
-            return new CustomResponse(500, "动态发布失败", null);
+            return new ResponseResult(500, "动态发布失败", null);
         }
     }
 
     @GetMapping("/post/get")
-    public CustomResponse getOneUserInfo(@RequestParam("uid") Integer uid) {
+    public ResponseResult getOneUserInfo(@RequestParam("uid") Integer uid) {
         System.out.println("被要求传输post,uid:" + uid);
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult responseResult = new ResponseResult();
         List<PostTree> postTrees = postService.getPostsByIds(uid);
-        customResponse.setData(postTrees);
+        responseResult.setData(postTrees);
         for(PostTree p : postTrees)System.out.println(p);
-        return customResponse;
+        return responseResult;
     }
 }

@@ -1,6 +1,6 @@
 package com.bilimili.buaa13.controller;
 
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.user.UserAccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -28,21 +28,21 @@ public class UserAccountController {
      */
     // 前端使用axios传递的data是Content-Type: application/json，需要用@RequestBody获取参数
     @PostMapping("/user/account/register")
-    public CustomResponse register(@RequestBody Map<String, String> map) {
+    public ResponseResult register(@RequestBody Map<String, String> map) {
         String username = map.get("username");
         String password = map.get("password");
         if(!isValidPassword(password)){
-            return new CustomResponse(500,"抱歉，您的密码不太标准哦",null);
+            return new ResponseResult(500,"抱歉，您的密码不太标准哦",null);
         }
         String confirmedPassword = map.get("confirmedPassword");
         try {
             return userAccountService.register(username, password, confirmedPassword);
         } catch (Exception e) {
             e.printStackTrace();
-            CustomResponse customResponse = new CustomResponse();
-            customResponse.setCode(500);
-            customResponse.setMessage("ERROR");
-            return customResponse;
+            ResponseResult responseResult = new ResponseResult();
+            responseResult.setCode(500);
+            responseResult.setMessage("ERROR");
+            return responseResult;
         }
     }
 
@@ -52,7 +52,7 @@ public class UserAccountController {
      * @return CustomResponse对象
      */
     @PostMapping("/user/account/login")
-    public CustomResponse login(@RequestBody Map<String, String> map) {
+    public ResponseResult login(@RequestBody Map<String, String> map) {
         String username = map.get("username");
         String password = map.get("password");
         return userAccountService.login(username, password);
@@ -64,7 +64,7 @@ public class UserAccountController {
      * @return CustomResponse对象
      */
     @PostMapping("/admin/account/login")
-    public CustomResponse adminLogin(@RequestBody Map<String, String> map) {
+    public ResponseResult adminLogin(@RequestBody Map<String, String> map) {
         String username = map.get("username");
         String password = map.get("password");
         return userAccountService.adminLogin(username, password);
@@ -75,8 +75,8 @@ public class UserAccountController {
      * @return CustomResponse对象
      */
     @GetMapping("/user/personal/info")
-    public CustomResponse personalInfo() {
-        return userAccountService.personalInfo();
+    public ResponseResult personalInfo() {
+        return userAccountService.personalInformation();
     }
 
     /**
@@ -84,8 +84,8 @@ public class UserAccountController {
      * @return CustomResponse对象
      */
     @GetMapping("/admin/personal/info")
-    public CustomResponse adminPersonalInfo() {
-        return userAccountService.adminPersonalInfo();
+    public ResponseResult adminPersonalInfo() {
+        return userAccountService.adminPersonalInformation();
     }
 
     /**
@@ -93,7 +93,7 @@ public class UserAccountController {
      */
     @GetMapping("/user/account/logout")
     public void logout() {
-        userAccountService.logout();
+        userAccountService.userLogout();
     }
 
     /**
@@ -111,7 +111,7 @@ public class UserAccountController {
      * @return  响应对象
      */
     @PostMapping("/user/password/update")
-    public CustomResponse updatePassword(@RequestParam("pw") String pw, @RequestParam("npw") String npw) {
+    public ResponseResult updatePassword(@RequestParam("pw") String pw, @RequestParam("npw") String npw) {
         return userAccountService.updatePassword(pw, npw);
     }
 }

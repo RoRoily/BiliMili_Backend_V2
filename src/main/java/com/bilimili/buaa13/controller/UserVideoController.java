@@ -1,6 +1,6 @@
 package com.bilimili.buaa13.controller;
 
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.service.video.FavoriteVideoService;
 import com.bilimili.buaa13.service.video.UserVideoService;
@@ -29,9 +29,9 @@ public class UserVideoController {
      */
     /*
     @PostMapping("/video/play/user")
-    public CustomResponse newPlayWithLoginUser(@RequestParam("vid") Integer vid) {
+    public ResponseResult newPlayWithLoginUser(@RequestParam("vid") Integer vid) {
         Integer uid = currentUser.getUserId();
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult customResponse = new ResponseResult();
         customResponse.setData(userVideoService.updatePlay(uid, vid));
         return customResponse;
     }*/
@@ -42,14 +42,14 @@ public class UserVideoController {
      * @return  返回用户与该视频的交互数据
      */
     @PostMapping("/video/play/user")
-    public CustomResponse newPlayWithLoginUser(@RequestParam("vid") Integer vid) {
+    public ResponseResult newPlayWithLoginUser(@RequestParam("vid") Integer vid) {
         Integer uid = currentUser.getUserId();
-        CustomResponse customResponse = new CustomResponse();
-        customResponse.setData(userVideoService.updatePlay(uid, vid));
+        ResponseResult responseResult = new ResponseResult();
+        responseResult.setData(userVideoService.updatePlay(uid, vid));
         Set<Integer> fids = new HashSet<>();
         fids.add(uid+5000);
         favoriteVideoService.addToFav(uid,vid,fids);
-        return customResponse;
+        return responseResult;
     }
 
     /**
@@ -60,13 +60,13 @@ public class UserVideoController {
      * @return 返回用户与该视频更新后的交互数据
      */
     @PostMapping("/video/love-or-not")
-    public CustomResponse loveOrNot(@RequestParam("vid") Integer vid,
+    public ResponseResult loveOrNot(@RequestParam("vid") Integer vid,
                                     @RequestParam("isLove") boolean isLove,
                                     @RequestParam("isSet") boolean isSet) {
         Integer uid = currentUser.getUserId();
-        CustomResponse customResponse = new CustomResponse();
-        customResponse.setData(userVideoService.setLoveOrUnlove(uid, vid, isLove, isSet));
-        return customResponse;
+        ResponseResult responseResult = new ResponseResult();
+        responseResult.setData(userVideoService.setLoveOrUnlove(uid, vid, isLove, isSet));
+        return responseResult;
     }
 
 }

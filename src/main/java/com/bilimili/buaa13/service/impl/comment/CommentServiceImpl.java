@@ -186,15 +186,15 @@ public class CommentServiceImpl implements CommentService {
      */
     @Override
     @Transactional
-    public CustomResponse deleteComment(Integer id, Integer uid, boolean isAdmin) {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult deleteComment(Integer id, Integer uid, boolean isAdmin) {
+        ResponseResult responseResult = new ResponseResult();
         QueryWrapper<Comment> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("id", id).ne("is_deleted", 1);
         Comment comment = commentMapper.selectOne(queryWrapper);
         if (comment == null) {
-            customResponse.setCode(404);
-            customResponse.setMessage("评论不存在");
-            return customResponse;
+            responseResult.setCode(404);
+            responseResult.setMessage("评论不存在");
+            return responseResult;
         }
 
         // 判断该用户是否有权限删除这条评论
@@ -220,13 +220,13 @@ public class CommentServiceImpl implements CommentService {
                 redisUtil.zsetDelMember("comment_reply:" + comment.getRootId(), comment.getId());
             }
 
-            customResponse.setCode(200);
-            customResponse.setMessage("删除成功!");
+            responseResult.setCode(200);
+            responseResult.setMessage("删除成功!");
         } else {
-            customResponse.setCode(403);
-            customResponse.setMessage("你无权删除该条评论");
+            responseResult.setCode(403);
+            responseResult.setMessage("你无权删除该条评论");
         }
-        return customResponse;
+        return responseResult;
     }
 
     /**

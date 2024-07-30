@@ -20,8 +20,8 @@ import com.alibaba.druid.support.http.WebStatFilter;
 @Configuration
 public class DruidConfig {
 
-    @Value("${spring.datasource.username}")
-    private String username;
+    @Value("${spring.datasource.account}")
+    private String account;
 
     @Value("${spring.datasource.password}")
     private String password;
@@ -49,7 +49,7 @@ public class DruidConfig {
         的父类 com.alibaba.druid.support.http.ResourceServlet 中找到
          */
         Map<String, String> initParams = new HashMap<>();
-        initParams.put("loginUsername", username); //后台管理界面的登录账号
+        initParams.put("loginUsername", account); //后台管理界面的登录账号
         initParams.put("loginPassword", password); //后台管理界面的登录密码
 
         //后台允许谁可以访问

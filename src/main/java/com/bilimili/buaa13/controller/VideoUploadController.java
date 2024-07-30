@@ -1,6 +1,6 @@
 package com.bilimili.buaa13.controller;
 
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.dto.VideoUploadInfoDTO;
 import com.bilimili.buaa13.service.video.VideoUploadService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ public class VideoUploadController {
      * @return
      */
     @GetMapping("/video/ask-chunk")
-    public CustomResponse askChunk(@RequestParam("hash") String hash) {
+    public ResponseResult askChunk(@RequestParam("hash") String hash) {
         return videoUploadService.askCurrentChunk(hash);
     }
 
@@ -36,14 +36,14 @@ public class VideoUploadController {
      * @throws IOException
      */
     @PostMapping("/video/upload-chunk")
-    public CustomResponse uploadChunk(@RequestParam("chunk") MultipartFile chunk,
+    public ResponseResult uploadChunk(@RequestParam("chunk") MultipartFile chunk,
                                       @RequestParam("hash") String hash,
                                       @RequestParam("index") Integer index) throws IOException {
         try {
             return videoUploadService.uploadChunk(chunk, hash, index);
         } catch (Exception e) {
             e.printStackTrace();
-            return new CustomResponse(500, "分片上传失败", null);
+            return new ResponseResult(500, "分片上传失败", null);
         }
 
     }
@@ -54,7 +54,7 @@ public class VideoUploadController {
      * @return
      */
     @GetMapping("/video/cancel-upload")
-    public CustomResponse cancelUpload(@RequestParam("hash") String hash) {
+    public ResponseResult cancelUpload(@RequestParam("hash") String hash) {
         return videoUploadService.cancelUpload(hash);
     }
 
@@ -73,7 +73,7 @@ public class VideoUploadController {
      * @return  响应对象
      */
     @PostMapping("/video/add")
-    public CustomResponse addVideo(@RequestParam("cover") MultipartFile cover,
+    public ResponseResult addVideo(@RequestParam("cover") MultipartFile cover,
                                    @RequestParam("hash") String hash,
                                    @RequestParam("title") String title,
                                    @RequestParam("type") Integer type,
@@ -88,7 +88,7 @@ public class VideoUploadController {
             return videoUploadService.addVideo(cover, videoUploadInfoDTO);
         } catch (Exception e) {
             e.printStackTrace();
-            return new CustomResponse(500, "封面上传失败", null);
+            return new ResponseResult(500, "封面上传失败", null);
         }
     }
 }

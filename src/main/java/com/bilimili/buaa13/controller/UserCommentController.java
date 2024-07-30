@@ -1,6 +1,6 @@
 package com.bilimili.buaa13.controller;
 
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.comment.UserCommentService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import lombok.extern.slf4j.Slf4j;
@@ -25,10 +25,10 @@ public class UserCommentController {
      * 获取用户点赞点踩评论集合
      */
     @GetMapping("/comment/get-like-and-dislike")
-    public CustomResponse getLikeAndDislike() {
+    public ResponseResult getLikeAndDislike() {
         Integer uid = currentUser.getUserId();
 
-        CustomResponse response = new CustomResponse();
+        ResponseResult response = new ResponseResult();
         response.setCode(200);
         response.setData(userCommentService.getUserLikeAndDislike(uid));
 
@@ -42,12 +42,12 @@ public class UserCommentController {
      * @param isSet  true 点 false 取消
      */
     @PostMapping("/comment/love-or-not")
-    public CustomResponse loveOrNot(@RequestParam("id") Integer id,
-                          @RequestParam("isLike") boolean isLike,
-                          @RequestParam("isSet") boolean isSet) {
+    public ResponseResult loveOrNot(@RequestParam("id") Integer id,
+                                    @RequestParam("isLike") boolean isLike,
+                                    @RequestParam("isSet") boolean isSet) {
         Integer uid = currentUser.getUserId();
         userCommentService.userSetLikeOrUnlike(uid, id, isLike, isSet);
-        return new CustomResponse();
+        return new ResponseResult();
     }
 
     /**
@@ -56,10 +56,10 @@ public class UserCommentController {
      * @return  点赞的评论id列表
      */
     @GetMapping("/comment/get-up-like")
-    public CustomResponse getUpLike(@RequestParam("uid") Integer uid) {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult getUpLike(@RequestParam("uid") Integer uid) {
+        ResponseResult responseResult = new ResponseResult();
         Map<String, Object> map = userCommentService.getUserLikeAndDislike(uid);
-        customResponse.setData(map.get("userLike"));
-        return customResponse;
+        responseResult.setData(map.get("userLike"));
+        return responseResult;
     }
 }

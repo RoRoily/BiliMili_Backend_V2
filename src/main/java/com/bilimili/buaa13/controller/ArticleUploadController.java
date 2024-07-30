@@ -1,10 +1,10 @@
 package com.bilimili.buaa13.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.mapper.ArticleMapper;
 import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.entity.Article;
-import com.bilimili.buaa13.entity.CustomResponse;
 import com.bilimili.buaa13.entity.Video;
 import com.bilimili.buaa13.entity.dto.ArticleUploadDTO;
 import com.bilimili.buaa13.service.article.ArticleUploadService;
@@ -39,17 +39,17 @@ public class ArticleUploadController {
 
     @PostMapping("/image/add")
     @Transactional
-    public CustomResponse addImage(
+    public ResponseResult addImage(
             @RequestParam("image") MultipartFile image
 
     ){
         try {
             String url = ossUtil.uploadImage(image,"articleArtwork");
             System.out.println(url);
-            return new CustomResponse(200,"图片上传成功",url);
+            return new ResponseResult(200,"图片上传成功",url);
         } catch (Exception e) {
             e.printStackTrace();
-            return new CustomResponse(500, "封面上传失败", null);
+            return new ResponseResult(500, "封面上传失败", null);
         }
 
     }
@@ -63,7 +63,7 @@ public class ArticleUploadController {
      * @return  响应对象
      */
     @PostMapping("/article/add/all")
-    public CustomResponse addAllArticle(
+    public ResponseResult addAllArticle(
             @RequestParam("cover") MultipartFile cover,
             //@RequestParam("cover") MultipartFile cover,
             //@RequestParam("title") String title,
@@ -89,7 +89,7 @@ public class ArticleUploadController {
                 } catch (NumberFormatException e) {
                     // 处理可能的转换异常
                     System.err.println("Invalid number format: " + s);
-                    return new CustomResponse(200,"关联视频的格式错误",null);
+                    return new ResponseResult(200,"关联视频的格式错误",null);
                 }
             }
             for(Integer vid1:videoList){
@@ -98,7 +98,7 @@ public class ArticleUploadController {
                 //Viode = articleMapper.selectOne(queryWrapper);
                 Video video = videoMapper.selectOne(queryWrapper);
                 if(video == null){
-                    return new CustomResponse(200,"关联视频列表中包含不存在的视频",null);
+                    return new ResponseResult(200,"关联视频列表中包含不存在的视频",null);
                 }
             }
 
@@ -113,10 +113,10 @@ public class ArticleUploadController {
             article.setStatus(0);
             article.setUid(currentUser.getUserId()); // 假设 currentUser 对象可以获取当前用户的 ID
             articleMapper.insert(article);
-            return new CustomResponse(200,"文章上传成功",article.getAid().toString());
+            return new ResponseResult(200,"文章上传成功",article.getAid().toString());
         } catch (Exception e) {
             e.printStackTrace();
-            return new CustomResponse(500, "封面上传失败", null);
+            return new ResponseResult(500, "封面上传失败", null);
         }
     }
 }

@@ -1,6 +1,6 @@
 package com.bilimili.buaa13.controller;
 
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.video.VideoStatsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,8 +18,8 @@ public class VideoStatsController {
      * @return
      */
     @PostMapping("/video/play/visitor")
-    public CustomResponse newPlayWithVisitor(@RequestParam("vid") Integer vid) {
+    public ResponseResult newPlayWithVisitor(@RequestParam("vid") Integer vid) {
         videoStatsService.updateStats(vid, "play", true, 1);
-        return new CustomResponse();
+        return new ResponseResult();
     }
 }

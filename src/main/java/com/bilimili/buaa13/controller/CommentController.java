@@ -1,7 +1,7 @@
 package com.bilimili.buaa13.controller;
 
 import com.bilimili.buaa13.entity.CommentTree;
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.comment.CommentService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.utils.RedisUtil;
@@ -27,10 +27,10 @@ public class CommentController {
      * @return  评论树列表
      */
     @GetMapping("/comment/get")
-    public CustomResponse getCommentTreeByVid(@RequestParam("vid") Integer vid,
-                                                 @RequestParam("offset") Long offset,
-                                                 @RequestParam("type") Integer type) {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult getCommentTreeByVid(@RequestParam("vid") Integer vid,
+                                              @RequestParam("offset") Long offset,
+                                              @RequestParam("type") Integer type) {
+        ResponseResult responseResult = new ResponseResult();
         long count = redisUtil.zCard("comment_video:" + vid);
         Map<String, Object> map = new HashMap<>();
         if (offset >= count) {
@@ -46,8 +46,8 @@ public class CommentController {
             map.put("more", true);
             map.put("comments", commentService.getCommentTreeByVid(vid, offset, type));
         }
-        customResponse.setData(map);
-        return customResponse;
+        responseResult.setData(map);
+        return responseResult;
     }
 
     /**
@@ -70,7 +70,7 @@ public class CommentController {
      * @return  响应对象
      */
     @PostMapping("/comment/add")
-    public CustomResponse addComment(
+    public ResponseResult addComment(
             @RequestParam("vid") Integer vid,
             @RequestParam("root_id") Integer rootId,
             @RequestParam("parent_id") Integer parentId,
@@ -78,14 +78,14 @@ public class CommentController {
             @RequestParam("content") String content ) {
         Integer uid = currentUser.getUserId();
 
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult responseResult = new ResponseResult();
         CommentTree commentTree = commentService.sendComment(vid, uid, rootId, parentId, toUserId, content);
         if (commentTree == null) {
-            customResponse.setCode(500);
-            customResponse.setMessage("发送失败！");
+            responseResult.setCode(500);
+            responseResult.setMessage("发送失败！");
         }
-        customResponse.setData(commentTree);
-        return customResponse;
+        responseResult.setData(commentTree);
+        return responseResult;
     }
 
     /**
@@ -94,7 +94,7 @@ public class CommentController {
      * @return  响应对象
      */
     @PostMapping("/comment/delete")
-    public CustomResponse delComment(@RequestParam("id") Integer id) {
+    public ResponseResult delComment(@RequestParam("id") Integer id) {
         Integer loginUid = currentUser.getUserId();
         return commentService.deleteComment(id, loginUid, currentUser.isAdmin());
     }

@@ -1,6 +1,6 @@
 package com.bilimili.buaa13.controller;
 
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.message.ChatService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.utils.RedisUtil;
@@ -31,17 +31,17 @@ public class ChatController {
      * @return  CustomResponse对象 message可能值："新创建"/"已存在"/"未知用户"
      */
     @GetMapping("/msg/chat/create/{uid}")
-    public CustomResponse createChat(@PathVariable("uid") Integer uid) {
-       CustomResponse customResponse = new CustomResponse();
+    public ResponseResult createChat(@PathVariable("uid") Integer uid) {
+       ResponseResult responseResult = new ResponseResult();
        //获取Chat,chat的细节
        Map<String, Object> result = chatService.createChat(uid, currentUser.getUserId());
        if (Objects.equals(result.get("msg").toString(), "新创建")) {//第一次聊天或之前的聊天被删除
-           customResponse.setData(result);  // 返回新创建的聊天
+           responseResult.setData(result);  // 返回新创建的聊天
        } else if (Objects.equals(result.get("msg").toString(), "未知用户")) {
-           customResponse.setCode(404);
+           responseResult.setCode(404);
        }
-       customResponse.setMessage(result.get("msg").toString());
-       return customResponse;
+       responseResult.setMessage(result.get("msg").toString());
+       return responseResult;
     }
 
     /**
@@ -50,9 +50,9 @@ public class ChatController {
      * @return  CustomResponse对象 包含带用户信息和最近一条消息的聊天列表以及是否还有更多数据
      */
     @GetMapping("/msg/chat/recent-list")
-    public CustomResponse getRecentList(@RequestParam("offset") Long offset) {
+    public ResponseResult getRecentList(@RequestParam("offset") Long offset) {
         Integer uid = currentUser.getUserId();
-        CustomResponse customResponse = new CustomResponse();
+        ResponseResult responseResult = new ResponseResult();
         Map<String, Object> map = new HashMap<>();
         map.put("list", chatService.getChatListWithData(uid, offset));
         // 检查是否还有更多
@@ -61,8 +61,8 @@ public class ChatController {
         } else {
             map.put("more", false);
         }
-        customResponse.setData(map);
-        return customResponse;
+        responseResult.setData(map);
+        return responseResult;
     }
 
     /**
@@ -71,10 +71,10 @@ public class ChatController {
      * @return  CustomResponse对象
      */
     @GetMapping("/msg/chat/delete/{uid}")
-    public CustomResponse deleteChat(@PathVariable("uid") Integer uid) {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult deleteChat(@PathVariable("uid") Integer uid) {
+        ResponseResult responseResult = new ResponseResult();
         chatService.delChat(uid, currentUser.getUserId());
-        return customResponse;
+        return responseResult;
     }
 
     /**

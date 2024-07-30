@@ -2,7 +2,7 @@ package com.bilimili.buaa13.service.impl.video;
 
 import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.mapper.VideoStatsMapper;
-import com.bilimili.buaa13.entity.CustomResponse;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.Video;
 import com.bilimili.buaa13.entity.VideoStats;
 import com.bilimili.buaa13.entity.dto.VideoUploadInfoDTO;
@@ -68,8 +68,8 @@ public class VideoUploadServiceImpl implements VideoUploadService {
      * @return CustomResponse对象
      */
     @Override
-    public CustomResponse askCurrentChunk(String hash) {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult askCurrentChunk(String hash) {
+        ResponseResult responseResult = new ResponseResult();
 
         // 查询本地
         // 获取分片文件的存储目录
@@ -78,16 +78,16 @@ public class VideoUploadServiceImpl implements VideoUploadService {
         File[] chunkFiles = chunkDir.listFiles((dir, name) -> name.startsWith(hash + "-"));
         // 返回还没上传的分片序号
         if (chunkFiles == null) {
-            customResponse.setData(0);
+            responseResult.setData(0);
         } else {
-            customResponse.setData(chunkFiles.length);
+            responseResult.setData(chunkFiles.length);
         }
 
         // 查询OSS当前存在的分片数量，即前端要上传的分片序号，建议分布式系统才使用OSS存储分片，单体系统本地存储分片效率更高
 //        int counts = ossUploadUtil.countFiles("chunk/", hash + "-");
-//        customResponse.setData(counts);
+//        responseResult.setData(counts);
 
-        return customResponse;
+        return responseResult;
     }
 
     /**
@@ -99,8 +99,8 @@ public class VideoUploadServiceImpl implements VideoUploadService {
      * @throws IOException
      */
     @Override
-    public CustomResponse uploadChunk(MultipartFile chunk, String hash, Integer index) throws IOException {
-        CustomResponse customResponse = new CustomResponse();
+    public ResponseResult uploadChunk(MultipartFile chunk, String hash, Integer index) throws IOException {
+        ResponseResult responseResult = new ResponseResult();
         // 构建分片文件名
         String chunkFileName = hash + "-" + index;
 
@@ -111,9 +111,9 @@ public class VideoUploadServiceImpl implements VideoUploadService {
         File chunkFile = new File(chunkFilePath);
         if (chunkFile.exists()) {
             log.warn("分片 " + chunkFilePath + " 已存在");
-            customResponse.setCode(500);
-            customResponse.setMessage("已存在分片文件");
-            return customResponse;
+            responseResult.setCode(500);
+            responseResult.setMessage("已存在分片文件");
+            return responseResult;
         }
         // 保存分片文件到指定目录
         chunk.transferTo(chunkFile);
@@ -123,15 +123,15 @@ public class VideoUploadServiceImpl implements VideoUploadService {
 //            boolean flag = ossUploadUtil.uploadChunk(chunk, chunkFileName);
 //            if (!flag) {
 //                log.warn("分片 " + chunkFileName + " 已存在");
-//                customResponse.setCode(500);
-//                customResponse.setMessage("已存在分片文件");
+//                responseResult.setCode(500);
+//                responseResult.setMessage("已存在分片文件");
 //            }
 //        } catch (IOException ioe) {
 //            log.error("读取分片文件数据流时出错了");
 //        }
 
         // 返回成功响应
-        return customResponse;
+        return responseResult;
     }
 
     /**
@@ -140,7 +140,7 @@ public class VideoUploadServiceImpl implements VideoUploadService {
      * @return CustomResponse对象
      */
     @Override
-    public CustomResponse cancelUpload(String hash) {
+    public ResponseResult cancelUpload(String hash) {
 
         // 删除本地分片文件
         // 获取分片文件的存储目录
@@ -160,7 +160,7 @@ public class VideoUploadServiceImpl implements VideoUploadService {
 //        ossUploadUtil.deleteFiles("chunk/", hash + "-");
 
         // 不管删没删成功 返回成功响应
-        return new CustomResponse();
+        return new ResponseResult();
     }
 
     /**
@@ -171,17 +171,17 @@ public class VideoUploadServiceImpl implements VideoUploadService {
      * @throws IOException
      */
     @Override
-    public CustomResponse addVideo(MultipartFile cover, VideoUploadInfoDTO videoUploadInfoDTO) throws IOException {
+    public ResponseResult addVideo(MultipartFile cover, VideoUploadInfoDTO videoUploadInfoDTO) throws IOException {
         Integer loginUserId = currentUser.getUserId();
         // 值的判定 虽然前端会判 防止非法请求 不过数据库也写不进去 但会影响封面保存
         if (videoUploadInfoDTO.getTitle().trim().length() == 0) {
-            return new CustomResponse(500, "标题不能为空", null);
+            return new ResponseResult(500, "标题不能为空", null);
         }
         if (videoUploadInfoDTO.getTitle().length() > 80) {
-            return new CustomResponse(500, "标题不能超过80字", null);
+            return new ResponseResult(500, "标题不能超过80字", null);
         }
         if (videoUploadInfoDTO.getDescr().length() > 2000) {
-            return new CustomResponse(500, "简介太长啦", null);
+            return new ResponseResult(500, "简介太长啦", null);
         }
 
         // 保存封面到本地
@@ -223,7 +223,7 @@ public class VideoUploadServiceImpl implements VideoUploadService {
             }
         }, taskExecutor);
 
-        return new CustomResponse();
+        return new ResponseResult();
     }
 
     /**

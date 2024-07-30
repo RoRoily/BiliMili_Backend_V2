@@ -2,13 +2,14 @@ package com.bilimili.buaa13.service.impl.user;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.mapper.FollowMapper;
 import com.bilimili.buaa13.mapper.UserMapper;
-import com.bilimili.buaa13.entity.CustomResponse;
 import com.bilimili.buaa13.entity.Follow;
 import com.bilimili.buaa13.entity.User;
 import com.bilimili.buaa13.entity.VideoStats;
 import com.bilimili.buaa13.entity.dto.UserDTO;
+import com.bilimili.buaa13.service.user.UserAccountService;
 import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.service.video.VideoStatsService;
 import com.bilimili.buaa13.utils.ESUtil;
@@ -23,19 +24,16 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
 public class UserServiceImpl implements UserService {
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private UserAccountService userAccountService;
 
     @Autowired
     private VideoStatsService videoStatsService;
@@ -70,57 +68,52 @@ public class UserServiceImpl implements UserService {
             return null;    // 如果uid不存在则返回空
         }
         UserDTO userDTO = new UserDTO();
-        userDTO.setUid(user.getUid());
-        userDTO.setState(user.getState());
         if (user.getState() == 2) {
-            userDTO.setNickname("账号已注销");
-            userDTO.setAvatar_url("https://cube.elemecdn.com/9/c2/f0ee8a3c7c9638a54940382568c9dpng.png");
-            userDTO.setBackground_url("https://tinypic.host/images/2023/11/15/69PB2Q5W9D2U7L.png");
-            userDTO.setGender(2);
-            userDTO.setDescription("-");
-            userDTO.setExp(0);
-            userDTO.setCoin((double) 0);
-            userDTO.setVideoCount(0);
-            userDTO.setFollowsCount(0);
-            userDTO.setFansCount(0);
-            userDTO.setLoveCount(0);
-            userDTO.setPlayCount(0);
+            userDTO = userAccountService.setSignOutUserDTO(user);
             return userDTO;
         }
-        userDTO.setNickname(user.getNickname());
-        userDTO.setAvatar_url(user.getAvatar());
-        userDTO.setBackground_url(user.getBackground());
-        userDTO.setGender(user.getGender());
-        userDTO.setDescription(user.getDescription());
-        userDTO.setExp(user.getExp());
-        userDTO.setCoin(user.getCoin());
+        userDTO = userAccountService.setUserDTO(user);
         userDTO.setFollowsCount(0);
         userDTO.setFansCount(0);
         //获取用户对应的视频列表
         //"user_video_upload:" + user.getUid()是完整的键值，可以取出内容。
+        //注释Redis
         Set<Object> set = redisUtil.zReverange("user_video_upload:" + user.getUid(), 0L, -1L);
-        if (set == null || set.size() == 0) {
+        if (set == null || set.isEmpty()) {
             userDTO.setVideoCount(0);
             userDTO.setLoveCount(0);
             userDTO.setPlayCount(0);
         }
-
-        // 并发执行每个视频数据统计的查询任务
-        //并行流方式遍历列表
-        List<VideoStats> list = set.stream().parallel()
+        else{
+            // 并发执行每个视频数据统计的查询任务
+            //并行流方式遍历列表
+            //注释并行
+            /*List<VideoStats> list = set.stream().parallel()
                 .map(vid -> videoStatsService.getVideoStatsById((Integer) vid))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList());*/
+            List<Object> listSet = new ArrayList<>(set);
+            List<VideoStats> list = new ArrayList<>();
 
-        //遍历查找用户播放，点赞总数据
-        int video = list.size(), love = 0, play = 0;
-        for (VideoStats videoStats : list) {
-            love = love + videoStats.getGood();
-            play = play + videoStats.getPlay();
+            int setSize = listSet.size();
+            for(int i=0;i< setSize;++i){
+                int vid = (int)listSet.get(i);
+                VideoStats videoStats = videoStatsService.getVideoStatsById(vid);
+                list.add(videoStats);
+            }
+            //遍历查找用户播放，点赞总数据
+            int video = list.size(), love = 0, play = 0;
+            userDTO.setVideoCount(video);
+            while(video>0){
+                video--;
+                VideoStats videoStats = list.get(video);
+                love = love + videoStats.getGood();
+                play = play + videoStats.getPlay();
+            }
+
+            userDTO.setLoveCount(love);
+            userDTO.setPlayCount(play);
+
         }
-        userDTO.setVideoCount(video);
-        userDTO.setLoveCount(love);
-        userDTO.setPlayCount(play);
-
         QueryWrapper<Follow> followQueryWrapper = new QueryWrapper<>();
         followQueryWrapper.eq("uidFollow", user.getUid());
         Integer fans = followMapper.getUidFansByUid(user.getUid()).size();
@@ -131,81 +124,97 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserDTO> getUserByIdList(List<Integer> list) {
+    public List<UserDTO> getUserByUIdList(List<Integer> list) {
         if (list.isEmpty()) return Collections.emptyList();
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.in("uid", list).ne("state", 2);
         List<User> users = userMapper.selectList(queryWrapper);
         if (users.isEmpty()) return Collections.emptyList();
-        return list.stream().parallel().flatMap(
-                uid -> {
-                    User user = users.stream()
-                            .filter(u -> Objects.equals(u.getUid(), uid))
-                            .findFirst()
-                            .orElse(null);
-                    if (user == null) return Stream.empty();
-                    UserDTO userDTO = new UserDTO(
-                            user.getUid(),
-                            user.getNickname(),
-                            user.getAvatar(),
-                            user.getBackground(),
-                            user.getGender(),
-                            user.getDescription(),
-                            user.getExp(),
-                            user.getCoin(),
-                            user.getState(),
-                            0,0,0,0,0
-                    );
-                    Set<Object> set = redisUtil.zReverange("user_video_upload:" + user.getUid(), 0L, -1L);
-                    if (set == null || set.size() == 0) {
-                        return Stream.of(userDTO);
-                    }
-
-                    // 并发执行每个视频数据统计的查询任务
-                    List<VideoStats> videoStatsList = set.stream().parallel()
-                            .map(vid -> videoStatsService.getVideoStatsById((Integer) vid))
-                            .collect(Collectors.toList());
-
-                    int video = videoStatsList.size(), love = 0, play = 0;
-                    for (VideoStats videoStats : videoStatsList) {
-                        love = love + videoStats.getGood();
-                        play = play + videoStats.getPlay();
-                    }
-                    userDTO.setVideoCount(video);
-                    userDTO.setLoveCount(love);
-                    userDTO.setPlayCount(play);
-                    return Stream.of(userDTO);
+        List<UserDTO> userDTOList = new ArrayList<>();
+        int listSize = list.size();
+        for(int i=0;i<listSize;++i){
+            Integer uid = list.get(i);
+            User user = null;
+            for(int j=0;j<users.size();++j){
+                User user1 = users.get(j);
+                if(Objects.equals(user1.getUid(), uid)){
+                    user = user1;
+                    break;
                 }
-        ).collect(Collectors.toList());
+            }
+            if(user == null){continue;}
+            UserDTO userDTO = new UserDTO(
+                    user.getUid(),
+                    user.getNickname(),
+                    user.getHeadPortrait(),
+                    user.getBackground(),
+                    user.getGender(),
+                    user.getDescription(),
+                    user.getExp(),
+                    user.getCoin(),
+                    user.getState(),
+                    0,0,0,0,0
+            );
+            Set<Object> set = redisUtil.zReverange("user_video_upload:" + user.getUid(), 0L, -1L);
+
+            if (set == null || set.isEmpty()) {
+                userDTOList.add(userDTO);
+                continue;
+            }
+
+            List<Object> listSet = new ArrayList<>(set);
+            List<VideoStats> listVideoStats = new ArrayList<>();
+
+            int setSize = listSet.size();
+            for(int j=0;j< setSize;++j){
+                int vid = (int)listSet.get(j);
+                VideoStats videoStats = videoStatsService.getVideoStatsById(vid);
+                listVideoStats.add(videoStats);
+            }
+            //遍历查找用户播放，点赞总数据
+            int video = listVideoStats.size(), love = 0, play = 0;
+            userDTO.setVideoCount(video);
+            while(video>0){
+                video--;
+                VideoStats videoStats = listVideoStats.get(video);
+                love = love + videoStats.getGood();
+                play = play + videoStats.getPlay();
+            }
+            userDTO.setLoveCount(love);
+            userDTO.setPlayCount(play);
+
+            userDTOList.add(userDTO);
+        }
+        return userDTOList;
     }
 
     @Override
     @Transactional
-    public CustomResponse updateUserInfo(Integer uid, String nickname, String desc, Integer gender) throws IOException {
-        CustomResponse customResponse = new CustomResponse();
-        if (nickname == null || nickname.trim().length() == 0) {
-            customResponse.setCode(500);
-            customResponse.setMessage("昵称不能为空");
-            return customResponse;
+    public ResponseResult updateUserInformation(Integer uid, String nickname, String desc, Integer gender) throws IOException {
+        ResponseResult responseResult = new ResponseResult();
+        if (nickname == null || nickname.trim().isEmpty()) {
+            responseResult.setCode(500);
+            responseResult.setMessage("昵称不能为空");
+            return responseResult;
         }
         if (nickname.length() > 24 || desc.length() > 100) {
-            customResponse.setCode(500);
-            customResponse.setMessage("输入字符过长");
-            return customResponse;
+            responseResult.setCode(500);
+            responseResult.setMessage("输入字符过长");
+            return responseResult;
         }
         if (Objects.equals(nickname, "账号已注销")) {
-            customResponse.setCode(500);
-            customResponse.setMessage("昵称非法");
-            return customResponse;
+            responseResult.setCode(500);
+            responseResult.setMessage("昵称非法");
+            return responseResult;
         }
         // 查重
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("nickname", nickname).ne("uid", uid);
         User user = userMapper.selectOne(queryWrapper);
         if (user != null) {
-            customResponse.setCode(500);
-            customResponse.setMessage("该昵称已被其他用户占用");
-            return customResponse;
+            responseResult.setCode(500);
+            responseResult.setMessage("该昵称已被其他用户占用");
+            return responseResult;
         }
         UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("uid", uid)
@@ -217,29 +226,32 @@ public class UserServiceImpl implements UserService {
         new_user.setUid(uid);
         new_user.setNickname(nickname);
         esUtil.updateUser(new_user);
-        redisUtil.delValue("user:" + uid);
-        return customResponse;
+        //注释Redis
+        //redisUtil.delValue("user:" + uid);
+        return responseResult;
     }
 
     @Override
-    public CustomResponse updateUserAvatar(Integer uid, MultipartFile file) throws IOException {
+    public ResponseResult updateUserHeadPortrait(Integer uid, MultipartFile file) throws IOException {
+        ResponseResult responseResult = new ResponseResult();
         // 保存封面到OSS，返回URL
-        String avatar_url = ossUtil.uploadImage(file, "avatar");
+        String headPortrait_url = ossUtil.uploadImage(file, "headPortrait");
         // 查旧的头像地址
         User user = userMapper.selectById(uid);
         // 先更新数据库
         UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.eq("uid", uid).set("avatar", avatar_url);
+        updateWrapper.eq("uid", uid).set("headPortrait", headPortrait_url);
         userMapper.update(null, updateWrapper);
         CompletableFuture.runAsync(() -> {
-            redisUtil.delValue("user:" + uid);  // 删除redis缓存
+            //注释Redis
+            //redisUtil.delValue("user:" + uid);  // 删除redis缓存
             // 如果就头像不是初始头像就去删除OSS的源文件
-            if (user.getAvatar().startsWith(OSS_BUCKET_URL)) {
-                String filename = user.getAvatar().substring(OSS_BUCKET_URL.length());
-//                System.out.println("要删除的源文件：" + filename);
+            if (user.getHeadPortrait().startsWith(OSS_BUCKET_URL)) {
+                String filename = user.getHeadPortrait().substring(OSS_BUCKET_URL.length());
                 ossUtil.deleteFiles(filename);
             }
         }, taskExecutor);
-        return new CustomResponse(200, "OK", avatar_url);
+        responseResult.setData(headPortrait_url);
+        return responseResult;
     }
 }
