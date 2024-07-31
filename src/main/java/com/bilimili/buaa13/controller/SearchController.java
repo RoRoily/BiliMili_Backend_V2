@@ -95,7 +95,7 @@ public class SearchController {
         keyword = URLDecoder.decode(keyword, "UTF-8");  // 解码经过url传输的字符串
         ResponseResult responseResult = new ResponseResult();
         List<Integer> vids = esUtil.searchVideosByKeyword(keyword, page, 30, true);
-        responseResult.setData(videoService.getVideosWithDataByIdList(vids));
+        responseResult.setData(videoService.getVideosWithDataByVideoIdList(vids));
         return responseResult;
     }
 

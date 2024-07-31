@@ -65,7 +65,7 @@ public class VideoReviewServiceImpl implements VideoReviewService {
         List<Video> videosByStatus = videoMapper.selectAllVideoByStatus(status);
         if (videosByStatus != null && !videosByStatus.isEmpty()) {
             // 判断数组是否为空，不为空则在数据库主键查询，并且返回没有被删除的视频
-            List<Map<String, Object>> mapList = videoService.getVideosWithDataByVideoList(videosByStatus, page, quantity);
+            List<Map<String, Object>> mapList = videoService.getVideosPageWithDataByVideoList(videosByStatus, page, quantity);
             responseResult.setData(mapList);
         }
         return responseResult;

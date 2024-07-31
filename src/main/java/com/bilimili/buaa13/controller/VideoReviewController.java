@@ -60,7 +60,7 @@ public class VideoReviewController {
             responseResult.setMessage("您不是管理员，无权访问");
             return responseResult;
         }
-        Map<String, Object> map = videoService.getVideoWithDataById(vid);
+        Map<String, Object> map = videoService.getVideoWithDataByVideoId(vid);
         responseResult.setData(map);    // 如果是是空照样返回，前端自动处理
         return responseResult;
     }

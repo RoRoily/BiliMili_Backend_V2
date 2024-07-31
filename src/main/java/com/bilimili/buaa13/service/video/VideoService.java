@@ -16,7 +16,7 @@ public interface VideoService {
      * @param quantity  每一页查询的数量 为空默认是10
      * @return  包含用户信息、分区信息、视频信息的map列表
      */
-    List<Map<String, Object>> getVideosWithDataByVideoList(List<Video>videoList, Integer index, Integer quantity);
+    List<Map<String, Object>> getVideosPageWithDataByVideoList(List<Video>videoList, Integer index, Integer quantity);
 
     /**
      * 按指定列（倒序）排序或者按给定id顺序排序，分页获取视频信息，
@@ -35,14 +35,14 @@ public interface VideoService {
      * @return 包含用户信息、分区信息、视频信息的map
      */
 
-    Map<String, Object> getVideoWithDataById(Integer vid);
+    Map<String, Object> getVideoWithDataByVideoId(Integer vid);
 
     /**
      * 根据有序vid列表查询视频以及相关信息
      * @param list  vid有序列表
      * @return  有序的视频列表
      */
-    List<Map<String, Object>> getVideosWithDataByIdList(List<Integer> list);
+    List<Map<String, Object>> getVideosWithDataByVideoIdList(List<Integer> list);
 
     /**
      * 更新视频状态，包括过审、不通过、删除，其中审核相关需要管理员权限，删除可以是管理员或者投稿用户
@@ -50,5 +50,5 @@ public interface VideoService {
      * @param status 要修改的状态，1通过 2不通过 3删除
      * @return 无data返回，仅返回响应信息
      */
-    ResponseResult updateVideoStatus(Integer vid, Integer status) throws IOException;
+    ResponseResult changeVideoStatus(Integer vid, Integer status) throws IOException;
 }

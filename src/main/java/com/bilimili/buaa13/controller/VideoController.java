@@ -49,7 +49,7 @@ public class VideoController {
     public ResponseResult updateStatus(@RequestParam("vid") Integer vid,
                                        @RequestParam("status") Integer status) {
         try {
-            return videoService.updateVideoStatus(vid, status);
+            return videoService.changeVideoStatus(vid, status);
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseResult(500, "操作失败", null);
@@ -71,7 +71,7 @@ public class VideoController {
         count = Math.min(count, allVideos.size());
         List<Video> randomVideos = videoMapper.selectCountVideoByRandom(1,count);
         if (randomVideos != null && !randomVideos.isEmpty()) {
-            videoList = videoService.getVideosWithDataByVideoList(randomVideos, 1, count);
+            videoList = videoService.getVideosPageWithDataByVideoList(randomVideos, 1, count);
             // 随机打乱列表顺序
             Collections.shuffle(videoList);
         }
@@ -132,7 +132,7 @@ public class VideoController {
         queryWrapper.in("vid", randomVid);
         List<Video> randomVideos = videoMapper.selectList(queryWrapper);
         if (!randomVideos.isEmpty()) {
-            videoList = videoService.getVideosWithDataByVideoList(randomVideos, 1, 10);
+            videoList = videoService.getVideosPageWithDataByVideoList(randomVideos, 1, 10);
             Collections.shuffle(videoList);     // 随机打乱列表顺序
         }
         System.out.println("videoList again:" + videoList.size());
@@ -157,7 +157,7 @@ public class VideoController {
     public ResponseResult getOneVideo(@RequestParam("vid") Integer vid) {
         System.out.println(vid);
         ResponseResult responseResult = new ResponseResult();
-        Map<String, Object> map = videoService.getVideoWithDataById(vid);
+        Map<String, Object> map = videoService.getVideoWithDataByVideoId(vid);
         if (map == null) {
             System.out.println("map == null");
             responseResult.setCode(404);

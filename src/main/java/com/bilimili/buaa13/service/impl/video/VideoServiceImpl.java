@@ -77,7 +77,7 @@ public class VideoServiceImpl implements VideoService {
      * @return  包含用户信息、分区信息、视频信息的map列表
      */
     @Override
-    public List<Map<String, Object>> getVideosWithDataByVideoList(List<Video> videoList, Integer index, Integer quantity) {
+    public List<Map<String, Object>> getVideosPageWithDataByVideoList(List<Video> videoList, Integer index, Integer quantity) {
         if (index == null) {
             index = 1;
         }
@@ -236,41 +236,24 @@ public class VideoServiceImpl implements VideoService {
      * @return 包含用户信息、分区信息、视频信息的map
      */
     @Override
-    public Map<String, Object> getVideoWithDataById(Integer vid) {
+    public Map<String, Object> getVideoWithDataByVideoId(Integer vid) {
         Map<String, Object> map = new HashMap<>();
-        // 先查询 redis
-        //Video video = redisUtil.getObject("video:" + vid, Video.class);
-        //if(video!=null){
-            //System.out.println("redis difference " + video.getStatus() +" " + newvideo.getStatus());
-    //}
-        //if (video == null) {
-            // redis 查不到再查数据库
-            QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("vid", vid).ne("status", 3);
-            Video video = videoMapper.selectOne(queryWrapper);
-            if (video != null) {
-                Video finalVideo1 = video;
-                CompletableFuture.runAsync(() -> {
-                    redisUtil.setExObjectValue("video:" + vid, finalVideo1);    // 异步更新到redis
-                }, taskExecutor);
-            } else  {
-                return null;
-            }
-
-        // 多线程异步并行查询用户信息和分区信息并封装
-        Video finalVideo = video;
-        CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
-            map.put("user", userService.getUserByUId(finalVideo.getUid()));
-            map.put("stats", videoStatsService.getStatsByVideoId(finalVideo.getVid()));
-        }, taskExecutor);
-        CompletableFuture<Void> categoryFuture = CompletableFuture.runAsync(() -> {
-            map.put("category", categoryService.getCategoryById(finalVideo.getMainClassId(), finalVideo.getSubClassId()));
-        }, taskExecutor);
+        QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("vid", vid).ne("status", 3);
+        Video video = videoMapper.selectOne(queryWrapper);
+        //注释Redis
+        /*if (video != null) {
+            Video finalVideo1 = video;
+            CompletableFuture.runAsync(() -> {
+                redisUtil.setExObjectValue("video:" + vid, finalVideo1);    // 异步更新到redis
+            }, taskExecutor);
+        } else  {
+            return null;
+        }*/
         map.put("video", video);
-        // 使用join()等待userFuture和categoryFuture任务完成
-        userFuture.join();
-        categoryFuture.join();
-
+        map.put("user", userService.getUserByUId(video.getUid()));
+        map.put("stats", videoStatsService.getStatsByVideoId(video.getVid()));
+        map.put("category", categoryService.getCategoryById(video.getMainClassId(), video.getSubClassId()));
         return map;
     }
 
@@ -280,41 +263,35 @@ public class VideoServiceImpl implements VideoService {
      * @return  有序的视频列表
      */
     @Override
-    public List<Map<String, Object>> getVideosWithDataByIdList(List<Integer> list) {
+    public List<Map<String, Object>> getVideosWithDataByVideoIdList(List<Integer> list) {
         if (list.isEmpty()) return Collections.emptyList();
         QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
         queryWrapper.in("vid", list).ne("status", 3);
         List<Video> videos = videoMapper.selectList(queryWrapper);
         if (videos.isEmpty()) return Collections.emptyList();
-        List<Map<String, Object>> mapList = list.stream().parallel().flatMap(
-                vid -> {
-                    Map<String, Object> map = new HashMap<>();
-                    // 找到videos中为vid的视频
-                    Video video = videos.stream()
-                            .filter(v -> Objects.equals(v.getVid(), vid))
-                            .findFirst()
-                            .orElse(null);
-
-                    if (video == null) {
-                        return Stream.empty(); // 跳过该项
-                    }
-                    map.put("video", video);
-
-                    CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
-                        map.put("user", userService.getUserByUId(video.getUid()));
-                        map.put("stats", videoStatsService.getStatsByVideoId(video.getVid()));
-                    }, taskExecutor);
-
-                    CompletableFuture<Void> categoryFuture = CompletableFuture.runAsync(() -> {
-                        map.put("category", categoryService.getCategoryById(video.getMainClassId(), video.getSubClassId()));
-                    }, taskExecutor);
-
-                    userFuture.join();
-                    categoryFuture.join();
-
-                    return Stream.of(map);
+        List<Map<String, Object>> mapList = new ArrayList<>();
+        for(Integer vid:list){
+            Map<String, Object> map = new HashMap<>();
+            Video video = null;
+            for(Video video0 :videos){
+                if(video0.getVid().equals(vid)){
+                    video = video0;
+                    break;
                 }
-        ).collect(Collectors.toList());
+            }
+            if(video==null){continue;}
+            try{
+                map.put("video", video);
+                map.put("user", userService.getUserByUId(video.getUid()));
+                map.put("stats", videoStatsService.getStatsByVideoId(video.getVid()));
+                map.put("category", categoryService.getCategoryById(video.getMainClassId(), video.getSubClassId()));
+            }
+            catch (Exception e){
+                e.printStackTrace();
+                continue;
+            }
+            mapList.add(map);
+        }
         return mapList;
     }
 
@@ -326,7 +303,7 @@ public class VideoServiceImpl implements VideoService {
      */
     @Override
     @Transactional
-    public ResponseResult updateVideoStatus(Integer vid, Integer status) throws IOException {
+    public ResponseResult changeVideoStatus(Integer vid, Integer status) throws IOException {
         ResponseResult responseResult = new ResponseResult();
         Integer userId = currentUser.getUserId();
         if (status == 1 || status == 2) {
@@ -335,65 +312,42 @@ public class VideoServiceImpl implements VideoService {
                 responseResult.setMessage("您不是管理员，无权访问");
                 return responseResult;
             }
-            if (status == 1) {
-                QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
-                queryWrapper.eq("vid", vid).ne("status", 3);
-                Video video = videoMapper.selectOne(queryWrapper);
-                if (video == null) {
-                    responseResult.setCode(404);
-                    responseResult.setMessage("视频不见了QAQ");
-                    return responseResult;
-                }
-                Integer lastStatus = video.getStatus();
-                video.setStatus(1);
-                UpdateWrapper<Video> updateWrapper = new UpdateWrapper<>();
-                updateWrapper.eq("vid", vid).set("status", 1).set("upload_date", new Date());     // 更新视频状态审核通过
-                int flag = videoMapper.update(null, updateWrapper);
-                if (flag > 0) {
-                    // 更新成功
-                    esUtil.updateVideo(video);  // 更新ES视频文档
-                    redisUtil.delMember("video_status:" + lastStatus, vid);     // 从旧状态移除
-                    redisUtil.addMember("video_status:1", vid);     // 加入新状态
-                    redisUtil.zset("user_video_upload:" + video.getUid(), video.getVid());
-                    redisUtil.delValue("video:" + vid);     // 删除旧的视频信息
-                    return responseResult;
-                } else {
-                    // 更新失败，处理错误情况
-                    responseResult.setCode(500);
-                    responseResult.setMessage("更新状态失败");
-                    return responseResult;
-                }
+            QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("vid", vid).ne("status", 3);
+            Video video = videoMapper.selectOne(queryWrapper);
+            if (video == null) {
+                responseResult.setCode(404);
+                responseResult.setMessage("视频不见了QAQ");
+                return responseResult;
             }
-            else {
-                // 目前逻辑跟上面一样的，但是可能以后要做一些如 记录不通过原因 等操作，所以就分开写了
-                QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
-                queryWrapper.eq("vid", vid).ne("status", 3);
-                Video video = videoMapper.selectOne(queryWrapper);
-                if (video == null) {
-                    responseResult.setCode(404);
-                    responseResult.setMessage("视频不见了QAQ");
-                    return responseResult;
+            //注释Redis
+            //Integer lastStatus = video.getStatus();
+            video.setStatus(1);
+            UpdateWrapper<Video> updateWrapper = new UpdateWrapper<>();
+            // 更新视频状态审核
+            updateWrapper.eq("vid", vid).set("status", 1).set("upload_date", new Date());
+            int flag = videoMapper.update(null, updateWrapper);
+            if (flag > 0) {
+                // 更新成功
+                esUtil.updateVideo(video);  // 更新ES视频文档
+                //注释Redis
+                /*redisUtil.delMember("video_status:" + lastStatus, vid);     // 从旧状态移除
+                redisUtil.addMember("video_status:1", vid);     // 加入新状态
+                redisUtil.zset("user_video_upload:" + video.getUid(), video.getVid());
+                redisUtil.delValue("video:" + vid);     // 删除旧的视频信息*/
+                if(status==2){
+                    //添加不通过的原因
+                    responseResult.setMessage("审核不通过");
                 }
-                Integer lastStatus = video.getStatus();
-                video.setStatus(2);
-                UpdateWrapper<Video> updateWrapper = new UpdateWrapper<>();
-                updateWrapper.eq("vid", vid).set("status", 2);     // 更新视频状态审核不通过
-                int flag = videoMapper.update(null, updateWrapper);
-                if (flag > 0) {
-                    // 更新成功
-                    esUtil.updateVideo(video);  // 更新ES视频文档
-                    redisUtil.delMember("video_status:" + lastStatus, vid);     // 从旧状态移除
-                    redisUtil.addMember("video_status:2", vid);     // 加入新状态
-                    redisUtil.zsetDelMember("user_video_upload:" + video.getUid(), video.getVid());
-                    redisUtil.delValue("video:" + vid);     // 删除旧的视频信息
-                    return responseResult;
-                } else {
-                    // 更新失败，处理错误情况
-                    responseResult.setCode(500);
-                    responseResult.setMessage("更新状态失败");
-                    return responseResult;
-                }
+                else responseResult.setMessage("审核通过");
+                return responseResult;
+            } else {
+                // 更新失败，处理错误情况
+                responseResult.setCode(500);
+                responseResult.setMessage("更新状态失败");
+                return responseResult;
             }
+
         } else if (status == 3) {
             QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("vid", vid).ne("status", 3);
@@ -403,11 +357,11 @@ public class VideoServiceImpl implements VideoService {
                 responseResult.setMessage("视频不见了QAQ");
                 return responseResult;
             }
-            if (Objects.equals(userId, video.getUid()) || currentUser.isAdmin()) {
+            if (video.getUid().equals(userId) || currentUser.isAdmin()) {
                 String videoUrl = video.getVideoUrl();
-                String videoPrefix = videoUrl.split("aliyuncs.com/")[1];  // OSS视频文件名
+                String videoName = videoUrl.split("aliyuncs.com/")[1];  // OSS视频文件名
                 String coverUrl = video.getCoverUrl();
-                String coverPrefix = coverUrl.split("aliyuncs.com/")[1];  // OSS封面文件名
+                String coverName = coverUrl.split("aliyuncs.com/")[1];  // OSS封面文件名
                 Integer lastStatus = video.getStatus();
                 UpdateWrapper<Video> updateWrapper = new UpdateWrapper<>();
                 updateWrapper.eq("vid", vid).set("status", 3).set("delete_date", new Date());     // 更新视频状态已删除
@@ -415,31 +369,36 @@ public class VideoServiceImpl implements VideoService {
                 if (flag > 0) {
                     // 更新成功
                     esUtil.deleteVideo(vid);
-                    redisUtil.delMember("video_status:" + lastStatus, vid);     // 从旧状态移除
+                    //注释redis
+                    /*redisUtil.delMember("video_status:" + lastStatus, vid);     // 从旧状态移除
                     redisUtil.delValue("video:" + vid);     // 删除旧的视频信息
                     redisUtil.delValue("danmu_idset:" + vid);   // 删除该视频的弹幕
-                    redisUtil.zsetDelMember("user_video_upload:" + video.getUid(), video.getVid());
+                    redisUtil.zsetDelMember("user_video_upload:" + video.getUid(), video.getVid());*/
                     // 搞个异步线程去删除OSS的源文件
-                    CompletableFuture.runAsync(() -> ossUtil.deleteFiles(videoPrefix), taskExecutor);
-                    CompletableFuture.runAsync(() -> ossUtil.deleteFiles(coverPrefix), taskExecutor);
+                    //注释异步线程
+                    /*CompletableFuture.runAsync(() -> ossUtil.deleteFiles(videoName), taskExecutor);
+                    CompletableFuture.runAsync(() -> ossUtil.deleteFiles(coverName), taskExecutor);*/
+                    ossUtil.deleteFiles(videoName);
+                    ossUtil.deleteFiles(coverName);
                     // 批量删除该视频下的全部评论缓存
-                    CompletableFuture.runAsync(() -> {
+                    //注释Redis
+                    /*CompletableFuture.runAsync(() -> {
                         Set<Object> set = redisUtil.zReverange("comment_video:" + vid, 0, -1);
                         List<String> list = new ArrayList<>();
                         set.forEach(id -> list.add("comment_reply:" + id));
                         list.add("comment_video:" + vid);
                         redisUtil.delValues(list);
-                    }, taskExecutor);
+                    }, taskExecutor);*/
                     return responseResult;
                 } else {
                     // 更新失败，处理错误情况
-                    responseResult.setCode(500);
                     responseResult.setMessage("更新状态失败");
+                    responseResult.setCode(500);
                     return responseResult;
                 }
             } else {
-                responseResult.setCode(403);
                 responseResult.setMessage("您没有权限删除视频");
+                responseResult.setCode(403);
                 return responseResult;
             }
         }
