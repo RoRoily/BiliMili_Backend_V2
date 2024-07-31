@@ -89,7 +89,7 @@ public class UserServiceImpl implements UserService {
             //并行流方式遍历列表
             //注释并行
             /*List<VideoStats> list = set.stream().parallel()
-                .map(vid -> videoStatsService.getVideoStatsById((Integer) vid))
+                .map(vid -> videoStatsService.getStatsByVideoId((Integer) vid))
                 .collect(Collectors.toList());*/
             List<Object> listSet = new ArrayList<>(set);
             List<VideoStats> list = new ArrayList<>();
@@ -97,7 +97,7 @@ public class UserServiceImpl implements UserService {
             int setSize = listSet.size();
             for(int i=0;i< setSize;++i){
                 int vid = (int)listSet.get(i);
-                VideoStats videoStats = videoStatsService.getVideoStatsById(vid);
+                VideoStats videoStats = videoStatsService.getStatsByVideoId(vid);
                 list.add(videoStats);
             }
             //遍历查找用户播放，点赞总数据
@@ -168,7 +168,7 @@ public class UserServiceImpl implements UserService {
             int setSize = listSet.size();
             for(int j=0;j< setSize;++j){
                 int vid = (int)listSet.get(j);
-                VideoStats videoStats = videoStatsService.getVideoStatsById(vid);
+                VideoStats videoStats = videoStatsService.getStatsByVideoId(vid);
                 listVideoStats.add(videoStats);
             }
             //遍历查找用户播放，点赞总数据

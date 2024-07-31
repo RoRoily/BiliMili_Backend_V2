@@ -30,7 +30,7 @@ public class ESUtil {
      */
     public void addVideo(Video video) throws IOException {
         try {
-            ESVideo esVideo = new ESVideo(video.getVid(), video.getUid(), video.getTitle(), video.getMcId(), video.getScId(), video.getTags(), video.getStatus());
+            ESVideo esVideo = new ESVideo(video.getVid(), video.getUid(), video.getTitle(), video.getMainClassId(), video.getSubClassId(), video.getTags(), video.getStatus());
             client.index(i -> i.index("video").id(esVideo.getVid().toString()).document(esVideo));
         } catch (IOException e) {
             log.error("添加视频文档到ElasticSearch时出错了：" + e);
@@ -57,7 +57,7 @@ public class ESUtil {
      */
     public void updateVideo(Video video) throws IOException {
         try {
-            ESVideo esVideo = new ESVideo(video.getVid(), video.getUid(), video.getTitle(), video.getMcId(), video.getScId(), video.getTags(), video.getStatus());
+            ESVideo esVideo = new ESVideo(video.getVid(), video.getUid(), video.getTitle(), video.getMainClassId(), video.getSubClassId(), video.getTags(), video.getStatus());
             client.update(u -> u.index("video").id(video.getVid().toString()).doc(esVideo), ESVideo.class);
         } catch (IOException e) {
             log.error("更新ElasticSearch视频文档时出错了：" + e);

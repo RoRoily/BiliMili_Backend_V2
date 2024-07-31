@@ -18,12 +18,12 @@ public class Video {
     private Integer uid;
     private String title;
     private Integer type;
-    private Integer auth;
-    private Double duration;
-    private String mcId;
-    private String scId;
+    private Integer author;
+    private Double videoTime;
+    private String mainClassId;
+    private String subClassId;
     private String tags;
-    private String descr;
+    private String description;
     private String coverUrl;
     private String videoUrl;
     private Integer status;     // 0审核中 1通过审核 2打回整改（指投稿信息不符） 3视频违规删除（视频内容违规）

@@ -13,9 +13,6 @@ import org.springframework.stereotype.Service;
 public class CurrentUser {
 
     @Autowired
-    private RedisUtil redisUtil;
-
-    @Autowired
     private UserMapper userMapper;
 
     /**

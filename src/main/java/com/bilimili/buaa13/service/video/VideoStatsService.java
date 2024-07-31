@@ -8,7 +8,7 @@ public interface VideoStatsService {
      * @param vid 视频ID
      * @return 视频数据统计
      */
-    VideoStats getVideoStatsById(Integer vid);
+    VideoStats getStatsByVideoId(Integer vid);
 
     /**
      * 更新指定字段
@@ -17,7 +17,7 @@ public interface VideoStatsService {
      * @param increase  是否增加，true则增加 false则减少
      * @param count 增减数量 一般是1，只有投币可以加2
      */
-    void updateStats(Integer vid, String column, boolean increase, Integer count);
+    void updateVideoStats(Integer vid, String column, boolean increase, Integer count);
 
     /**
      * 同时更新点赞和点踩

@@ -48,14 +48,14 @@ public class PostController {
             //@RequestParam("cover") MultipartFile cover,
             //@RequestParam("title") String title,
             //@RequestParam("type") Integer type,
-            //@RequestParam("auth") Integer auth,
+            //@RequestParam("author") Integer author,
             //@RequestParam("duration") Double duration,
             //@RequestParam("mcid") String mcid,
             //@RequestParam("scid") String scid,
             //@RequestParam("tags") String tags,
             //@RequestParam("descr") String descr
     ) {
-        //ArticleUploadDTO articleUploadDTO = new ArticleUploadDTO(null, title, content,type, auth, duration, mcid, scid, tags, descr, null);
+        //ArticleUploadDTO articleUploadDTO = new ArticleUploadDTO(null, title, content,type, author, duration, mcid, scid, tags, descr, null);
         //ArticleUploadDTO articleUploadDTO = new ArticleUploadDTO(null, content);
         try {
             Post post = new Post();

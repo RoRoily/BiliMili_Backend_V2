@@ -69,7 +69,7 @@ public class UserVideoServiceImpl implements UserVideoService {
         // 异步线程更新video表和redis
         CompletableFuture.runAsync(() -> {
             redisUtil.zset("user_video_history:" + uid, vid);   // 添加到/更新观看历史记录
-            videoStatsService.updateStats(vid, "play", true, 1);
+            videoStatsService.updateVideoStats(vid, "play", true, 1);
         }, taskExecutor);
         return userVideo;
     }
@@ -110,7 +110,7 @@ public class UserVideoServiceImpl implements UserVideoService {
             } else {
                 // 原本没点踩，只需要点赞就行
                 CompletableFuture.runAsync(() -> {
-                    videoStatsService.updateStats(vid, "good", true, 1);
+                    videoStatsService.updateVideoStats(vid, "good", true, 1);
                 }, taskExecutor);
             }
             redisUtil.zset(key, vid);   // 添加点赞记录
@@ -148,7 +148,7 @@ public class UserVideoServiceImpl implements UserVideoService {
             userVideoMapper.update(null, updateWrapper);
             redisUtil.zsetDelMember(key, vid);  // 移除点赞记录
             CompletableFuture.runAsync(() -> {
-                videoStatsService.updateStats(vid, "good", false, 1);
+                videoStatsService.updateVideoStats(vid, "good", false, 1);
             }, taskExecutor);
         } else if (isSet) {
             // 点踩
@@ -172,7 +172,7 @@ public class UserVideoServiceImpl implements UserVideoService {
             } else {
                 // 原本没点赞，只需要点踩就行
                 CompletableFuture.runAsync(() -> {
-                    videoStatsService.updateStats(vid, "bad", true, 1);
+                    videoStatsService.updateVideoStats(vid, "bad", true, 1);
                 }, taskExecutor);
             }
             userVideoMapper.update(null, updateWrapper);
@@ -189,7 +189,7 @@ public class UserVideoServiceImpl implements UserVideoService {
             updateWrapper.setSql("unlove = 0");
             userVideoMapper.update(null, updateWrapper);
             CompletableFuture.runAsync(() -> {
-                videoStatsService.updateStats(vid, "bad", false, 1);
+                videoStatsService.updateVideoStats(vid, "bad", false, 1);
             }, taskExecutor);
         }
         return userVideo;
@@ -212,7 +212,7 @@ public class UserVideoServiceImpl implements UserVideoService {
             updateWrapper.setSql("collect = 0");
         }
         CompletableFuture.runAsync(() -> {
-            videoStatsService.updateStats(vid, "collect", isCollect, 1);
+            videoStatsService.updateVideoStats(vid, "collect", isCollect, 1);
         }, taskExecutor);
         userVideoMapper.update(null, updateWrapper);
     }

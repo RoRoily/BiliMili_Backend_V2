@@ -130,7 +130,7 @@ class ApplicationTests {
 
     @Test
     void test() {
-        VideoStats videoStats = videoStatsService.getVideoStatsById(1);
+        VideoStats videoStats = videoStatsService.getStatsByVideoId(1);
         System.out.println(videoStats);
     }
 
@@ -162,7 +162,7 @@ class ApplicationTests {
         List<Video> videos = videoMapper.selectList(queryWrapper);
         List<BulkOperation> bulkOperationList = new ArrayList<>();
         for (Video video : videos) {
-            ESVideo esVideo = new ESVideo(video.getVid(), video.getUid(), video.getTitle(), video.getMcId(), video.getScId(), video.getTags(), video.getStatus());
+            ESVideo esVideo = new ESVideo(video.getVid(), video.getUid(), video.getTitle(), video.getMainClassId(), video.getSubClassId(), video.getTags(), video.getStatus());
             bulkOperationList.add(BulkOperation.of(o -> o.index(i -> i.document(esVideo).id(esVideo.getVid().toString()))));
         }
         BulkResponse bulkResponse = client.bulk(b -> b.index("video").operations(bulkOperationList));

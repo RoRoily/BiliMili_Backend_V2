@@ -67,7 +67,7 @@ public class DanmuServiceImpl implements DanmuService {
             UpdateWrapper<Danmu> updateWrapper = new UpdateWrapper<>();
             updateWrapper.eq("id", id).set("state", 3);
             danmuMapper.update(null, updateWrapper);
-            videoStatsService.updateStats(danmu.getVid(), "danmu", false, 1);
+            videoStatsService.updateVideoStats(danmu.getVid(), "danmu", false, 1);
             redisUtil.delMember("danmu_idset:" + danmu.getVid(), id);
         } else {
             responseResult.setCode(403);

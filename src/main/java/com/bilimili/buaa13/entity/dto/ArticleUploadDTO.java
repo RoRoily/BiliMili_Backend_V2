@@ -13,7 +13,7 @@ public class ArticleUploadDTO {
     //private String title;
     private MultipartFile content;
     //private Integer type;
-    //private Integer auth;
+    //private Integer author;
    // private Double duration;
    // private String mcId;
     //private String scId;

@@ -109,7 +109,7 @@ public class DanmuWebSocketServer {
                     new Date()
             );
             danmuMapper.insert(danmu);
-            videoStatsService.updateStats(Integer.parseInt(vid), "danmu", true, 1);
+            videoStatsService.updateVideoStats(Integer.parseInt(vid), "danmu", true, 1);
             redisUtil.addMember("danmu_idset:" + vid, danmu.getId());   // 加入对应视频的ID集合，以便查询
 
             // 广播弹幕

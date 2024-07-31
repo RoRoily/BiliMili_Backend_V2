@@ -132,7 +132,7 @@ public class EventListenerService {
             List<Object> vidList = videoMapper.selectObjs(queryWrapper);
             try {
                 redisUtil.delValue("video_status:" + i);   // 先将原来的删掉
-                if (vidList != null && vidList.size() > 0) {
+                if (vidList != null && !vidList.isEmpty()) {
                     redisUtil.addMembers("video_status:" + i, vidList);
                 }
             } catch (Exception e) {

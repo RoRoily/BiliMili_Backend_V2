@@ -16,21 +16,15 @@ public class VideoStatsServiceImpl implements VideoStatsService {
     @Autowired
     private VideoStatsMapper videoStatsMapper;
 
-    @Autowired
-    private RedisUtil redisUtil;
-
-    @Autowired
-    @Qualifier("taskExecutor")
-    private Executor taskExecutor;
-
     /**
      * 根据视频ID查询视频常变数据
      * @param vid 视频ID
      * @return 视频数据统计
      */
     @Override
-    public VideoStats getVideoStatsById(Integer vid) {
-        VideoStats videoStats = redisUtil.getObject("videoStats:" + vid, VideoStats.class);
+    public VideoStats getStatsByVideoId(Integer vid) {
+        //注释Redis
+        /*VideoStats videoStats = redisUtil.getObject("videoStats:" + vid, VideoStats.class);
         if (videoStats == null) {
             videoStats = videoStatsMapper.selectById(vid);
             if (videoStats != null) {
@@ -41,9 +35,8 @@ public class VideoStatsServiceImpl implements VideoStatsService {
             } else {
                 return null;
             }
-        }
-        // 多线程查redis反而更慢了，所以干脆直接查数据库
-        return videoStats;
+        }*/
+        return videoStatsMapper.selectById(vid);
     }
 
     /**
@@ -54,17 +47,19 @@ public class VideoStatsServiceImpl implements VideoStatsService {
      * @param count 增减数量 一般是1，只有投币可以加2
      */
     @Override
-    public void updateStats(Integer vid, String column, boolean increase, Integer count) {
+    public void updateVideoStats(Integer vid, String column, boolean increase, Integer count) {
         UpdateWrapper<VideoStats> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.eq("vid", vid);
         if (increase) {
+            updateWrapper.eq("vid", vid);
             updateWrapper.setSql(column + " = " + column + " + " + count);
         } else {
             // 更新后的字段不能小于0
+            updateWrapper.eq("vid", vid);
             updateWrapper.setSql(column + " = CASE WHEN " + column + " - " + count + " < 0 THEN 0 ELSE " + column + " - " + count + " END");
         }
         videoStatsMapper.update(null, updateWrapper);
-        redisUtil.delValue("videoStats:" + vid);
+        //注释Redis
+        //redisUtil.delValue("videoStats:" + vid);
     }
 
     /**
@@ -75,15 +70,17 @@ public class VideoStatsServiceImpl implements VideoStatsService {
     @Override
     public void updateGoodAndBad(Integer vid, boolean addGood) {
         UpdateWrapper<VideoStats> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.eq("vid", vid);
         if (addGood) {
+            updateWrapper.eq("vid", vid);
             updateWrapper.setSql("good = good + 1");
             updateWrapper.setSql("bad = CASE WHEN bad - 1 < 0 THEN 0 ELSE bad - 1 END");
         } else {
+            updateWrapper.eq("vid", vid);
             updateWrapper.setSql("bad = bad + 1");
             updateWrapper.setSql("good = CASE WHEN good - 1 < 0 THEN 0 ELSE good - 1 END");
         }
         videoStatsMapper.update(null, updateWrapper);
-        redisUtil.delValue("videoStats:" + vid);
+        //注释Redis
+        //redisUtil.delValue("videoStats:" + vid);
     }
 }

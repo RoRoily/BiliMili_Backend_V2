@@ -5,6 +5,7 @@ import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.mapper.FavoriteVideoMapper;
 import com.bilimili.buaa13.entity.FavoriteVideo;
 import com.bilimili.buaa13.entity.Video;
+import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.service.video.VideoService;
 import com.bilimili.buaa13.utils.RedisUtil;
@@ -18,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RestController
 public class VideoController {
@@ -36,6 +36,8 @@ public class VideoController {
 
     @Autowired
     private SqlSessionFactory sqlSessionFactory;
+    @Autowired
+    private VideoMapper videoMapper;
 
     /**
      * 更新视频状态，包括过审、不通过、删除，其中审核相关需要管理员权限，删除可以是管理员或者投稿用户
@@ -62,10 +64,14 @@ public class VideoController {
     public ResponseResult randomVideosForVisitor() {
         ResponseResult responseResult = new ResponseResult();
         int count = 11;
-        Set<Object> idSet = redisUtil.srandmember("video_status:1", count);
+        //注释Redis
+        //Set<Object> idSet = redisUtil.srandmember("video_status:1", count);
         List<Map<String, Object>> videoList = new ArrayList<>();
-        if (idSet != null && !idSet.isEmpty()) {
-            videoList = videoService.getVideosWithDataByIds(idSet, 1, count);
+        List<Video> allVideos = videoMapper.selectAllVideoByStatus(1);
+        count = Math.min(count, allVideos.size());
+        List<Video> randomVideos = videoMapper.selectCountVideoByRandom(1,count);
+        if (randomVideos != null && !randomVideos.isEmpty()) {
+            videoList = videoService.getVideosWithDataByVideoList(randomVideos, 1, count);
             // 随机打乱列表顺序
             Collections.shuffle(videoList);
         }
@@ -86,39 +92,54 @@ public class VideoController {
         ResponseResult responseResult = new ResponseResult();
         Map<String, Object> map = new HashMap<>();
         List<Integer> vidsList = new ArrayList<>();
-        if (vids.trim().length() > 0) {
-            vidsList = Arrays.stream(vids.split(","))
-                    .map(Integer::parseInt)
-                    .collect(Collectors.toList());  // 从字符串切分出id列表
+        if (!vids.trim().isEmpty()) {
+            String[] vidArray = vids.split(","); // 将字符串分割成数组
+            for (String vid : vidArray) {
+                try {
+                    vidsList.add(Integer.parseInt(vid)); // 将每个元素转换为 Integer 并添加到列表中
+                } catch (NumberFormatException e) {
+                    // 处理转换异常的情况
+                    e.printStackTrace();
+                }
+            }
         }
-        Set<Object> set = redisUtil.getMembers("video_status:1");
-        if (set == null) {
+        //注释Redis
+        //Set<Object> set = redisUtil.getMembers("video_status:1");
+        List<Video> allVideos = videoMapper.selectAllVideoByStatus(1);
+        List<Integer> allVideoIds = new ArrayList<>();
+        if (allVideos == null) {
             map.put("videos", new ArrayList<>());
             map.put("vids", new ArrayList<>());
             map.put("more", false);
             responseResult.setData(map);
             return responseResult;
         }
-        vidsList.forEach(set::remove);  // 去除已获取的元素
-        Set<Object> idSet = new HashSet<>();    // 存放将要返回的id集合
-        Random random = new Random();
-        // 随机获取10个vid
-        for (int i = 0; i < 10 && !set.isEmpty(); i++) {
-            Object[] arr = set.toArray();
-            int randomIndex = random.nextInt(set.size());
-            idSet.add(arr[randomIndex]);
-            set.remove(arr[randomIndex]);   // 查过的元素移除
+        for(Video video : allVideos){
+            allVideoIds.add(video.getVid());
         }
+        allVideoIds.removeAll(vidsList);
+        List<Integer> randomVid = new ArrayList<>();
+        // 打乱列表
+        Collections.shuffle(allVideoIds);
+        //随机获取9个vid
+        int size = Math.min(allVideoIds.size(), 9);
+        for (int i = 0; i < size; i++) {
+            randomVid.add(allVideoIds.get(i));
+        }
+
         List<Map<String, Object>> videoList = new ArrayList<>();
-        if (!idSet.isEmpty()) {
-            videoList = videoService.getVideosWithDataByIds(idSet, 1, 10);
+        QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("vid", randomVid);
+        List<Video> randomVideos = videoMapper.selectList(queryWrapper);
+        if (!randomVideos.isEmpty()) {
+            videoList = videoService.getVideosWithDataByVideoList(randomVideos, 1, 10);
             Collections.shuffle(videoList);     // 随机打乱列表顺序
         }
         System.out.println("videoList again:" + videoList.size());
         map.put("videos", videoList);
-        map.put("vids", idSet);
-        System.out.println("vids + : " + idSet);
-        if (!set.isEmpty()) {
+        map.put("vids", randomVid);
+        System.out.println("vids + : " + randomVid);
+        if (!videoList.isEmpty()) {
             map.put("more", true);
         } else {
             map.put("more", false);

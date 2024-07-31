@@ -19,7 +19,7 @@ public class VideoStatsController {
      */
     @PostMapping("/video/play/visitor")
     public ResponseResult newPlayWithVisitor(@RequestParam("vid") Integer vid) {
-        videoStatsService.updateStats(vid, "play", true, 1);
+        videoStatsService.updateVideoStats(vid, "play", true, 1);
         return new ResponseResult();
     }
 }

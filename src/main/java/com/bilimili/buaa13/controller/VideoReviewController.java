@@ -30,7 +30,7 @@ public class VideoReviewController {
      */
     @GetMapping("/review/video/total")
     public ResponseResult getTotal(@RequestParam("vstatus") Integer status) {
-        return videoReviewService.getTotalByStatus(status);
+        return videoReviewService.getTotalNumberByStatus(status);
     }
 
     /**
@@ -44,7 +44,7 @@ public class VideoReviewController {
     public ResponseResult getVideos(@RequestParam("vstatus") Integer status,
                                     @RequestParam(value = "page", defaultValue = "1") Integer page,
                                     @RequestParam(value = "quantity", defaultValue = "10") Integer quantity) {
-        return videoReviewService.getVideosByPage(status, page, quantity);
+        return videoReviewService.getVideosByPageAndStatus(status, page, quantity);
     }
 
     /**

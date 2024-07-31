@@ -49,7 +49,7 @@ public class HistoryController {
         List<Integer> vids = favoriteVideoMapper.getVidByFid(fid);
         List<Date> times = favoriteVideoMapper.getTimeByFid(fid);
         List<String> titles = new ArrayList<>();
-        List<Double> durations = new ArrayList<>();
+        List<Double> videoTimes = new ArrayList<>();
         List<Integer> playCounts = new ArrayList<>();
         List<String> urls = new ArrayList<>();
         for(Integer vid: vids){
@@ -60,14 +60,14 @@ public class HistoryController {
             Video video = videoMapper.selectOne(videoQueryWrapper);
             VideoStats videoStats = videoStatsMapper.selectOne(videoStatsQueryWrapper);
             titles.add(video.getTitle());
-            durations.add(video.getDuration());
+            videoTimes.add(video.getVideoTime());
             urls.add(video.getCoverUrl());
             playCounts.add(videoStats.getPlay());
         }
         Map<String,Object> dataMap = new HashMap<>();
         dataMap.put("vid",vids);
         dataMap.put("title",titles);
-        dataMap.put("duration",durations);
+        dataMap.put("duration", videoTimes);
         dataMap.put("url",urls);
         dataMap.put("view",playCounts);
         dataMap.put("time",times);

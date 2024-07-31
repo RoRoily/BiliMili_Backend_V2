@@ -125,7 +125,7 @@ public class CategoryServiceImpl implements CategoryService {
         // 如果redis中没有数据，就从mysql中获取并更新到redis
         if (category == null) {
             QueryWrapper<Category> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("mc_id", mcId).eq("sc_id", scId);
+            queryWrapper.eq("main_class_id", mcId).eq("sub_class_id", scId);
             category = categoryMapper.selectOne(queryWrapper);
             if (category == null) {
                 return new Category();    // 如果不存在则返回空

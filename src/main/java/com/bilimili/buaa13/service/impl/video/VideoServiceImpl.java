@@ -28,7 +28,6 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -72,13 +71,13 @@ public class VideoServiceImpl implements VideoService {
 
     /**
      * 根据id分页获取视频信息，包括用户和分区信息
-     * @param set   要查询的视频id集合
+     * @param videoList   要查询的视频数组
      * @param index 分页页码 为空默认是1
      * @param quantity  每一页查询的数量 为空默认是10
      * @return  包含用户信息、分区信息、视频信息的map列表
      */
     @Override
-    public List<Map<String, Object>> getVideosWithDataByIds(Set<Object> set, Integer index, Integer quantity) {
+    public List<Map<String, Object>> getVideosWithDataByVideoList(List<Video> videoList, Integer index, Integer quantity) {
         if (index == null) {
             index = 1;
         }
@@ -88,54 +87,29 @@ public class VideoServiceImpl implements VideoService {
         int startIndex = (index - 1) * quantity;
         int endIndex = startIndex + quantity;
         // 检查数据是否足够满足分页查询
-        if (startIndex > set.size()) {
+        if (startIndex > videoList.size()) {
             // 如果数据不足以填充当前分页，返回空列表
             return Collections.emptyList();
         }
-        List<Video> videoList = new CopyOnWriteArrayList<>();   // 使用线程安全的集合类 CopyOnWriteArrayList 保证多线程处理共享List不会出现并发问题
 
         // 直接数据库分页查询    （平均耗时 13ms）
-        List<Object> idList = new ArrayList<>(set);
-        endIndex = Math.min(endIndex, idList.size());
-        List<Object> sublist = idList.subList(startIndex, endIndex);
-        QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("vid", sublist).ne("status", 3);
-        videoList = videoMapper.selectList(queryWrapper);
+        endIndex = Math.min(endIndex, videoList.size());
+        List<Video> sublist = videoList.subList(startIndex, endIndex);
+        sublist.removeIf(video -> video.getStatus() == 3);
+        videoList = sublist;
         if (videoList.isEmpty()) return Collections.emptyList();
-        Set<Object> idSet = new HashSet<>();
-        // 并行处理每一个视频，提高效率
-        // 先将videoList转换为Stream
-        Stream<Video> videoStream = videoList.stream();
-        List<Map<String, Object>> mapList = videoStream.parallel() // 利用parallel()并行处理
-                .map(video -> {
-//                    long start = System.currentTimeMillis();
-//                    System.out.println("================ 开始查询 " + video.getVid() + " 号视频相关信息 ===============   当前时间 " + start);
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("video", video);
+        List<Map<String, Object>> mapList = new ArrayList<>();
+        for(Video video : videoList) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("video",video);
+            // 获取 user 和 stats 信息
+            map.put("user", userService.getUserByUId(video.getUid()));
+            map.put("stats", videoStatsService.getStatsByVideoId(video.getVid()));
+            // 获取 category 信息
+            map.put("category", categoryService.getCategoryById(video.getMainClassId(), video.getSubClassId()));
 
-                    CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
-                        map.put("user", userService.getUserByUId(video.getUid()));
-                        map.put("stats", videoStatsService.getVideoStatsById(video.getVid()));
-                    }, taskExecutor);
-
-                    CompletableFuture<Void> categoryFuture = CompletableFuture.runAsync(() -> {
-                        map.put("category", categoryService.getCategoryById(video.getMcId(), video.getScId()));
-                    }, taskExecutor);
-
-                    // 使用join()等待全部任务完成
-                    userFuture.join();
-                    categoryFuture.join();
-//                    long end = System.currentTimeMillis();
-//                    System.out.println("================ 结束查询 " + video.getVid() + " 号视频相关信息 ===============   当前时间 " + end + "   耗时 " + (end - start));
-
-                    return map;
-                })
-                .collect(Collectors.toList());
-
-//        end = System.currentTimeMillis();
-//        System.out.println("封装耗时：" + (end - start));
-
-        //System.out.println("video random map is " + mapList);
+            mapList.add(map);
+        }
         return mapList;
     }
 
@@ -174,10 +148,10 @@ public class VideoServiceImpl implements VideoService {
                     map.put("video", video);
                     CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
                         map.put("user", userService.getUserByUId(video.getUid()));
-                        map.put("stats", videoStatsService.getVideoStatsById(video.getVid()));
+                        map.put("stats", videoStatsService.getStatsByVideoId(video.getVid()));
                     }, taskExecutor);
                     CompletableFuture<Void> categoryFuture = CompletableFuture.runAsync(() -> {
-                        map.put("category", categoryService.getCategoryById(video.getMcId(), video.getScId()));
+                        map.put("category", categoryService.getCategoryById(video.getMainClassId(), video.getSubClassId()));
                     }, taskExecutor);
                     userFuture.join();
                     categoryFuture.join();
@@ -207,10 +181,10 @@ public class VideoServiceImpl implements VideoService {
                     map.put("video", video);
                     CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
                         map.put("user", userService.getUserByUId(video.getUid()));
-                        map.put("stats", videoStatsService.getVideoStatsById(video.getVid()));
+                        map.put("stats", videoStatsService.getStatsByVideoId(video.getVid()));
                     }, taskExecutor);
                     CompletableFuture<Void> categoryFuture = CompletableFuture.runAsync(() -> {
-                        map.put("category", categoryService.getCategoryById(video.getMcId(), video.getScId()));
+                        map.put("category", categoryService.getCategoryById(video.getMainClassId(), video.getSubClassId()));
                     }, taskExecutor);
                     userFuture.join();
                     categoryFuture.join();
@@ -244,7 +218,7 @@ public class VideoServiceImpl implements VideoService {
                         map.put("user", userService.getUserByUId(video.getUid()));
                     }, taskExecutor);
                     CompletableFuture<Void> categoryFuture = CompletableFuture.runAsync(() -> {
-                        map.put("category", categoryService.getCategoryById(video.getMcId(), video.getScId()));
+                        map.put("category", categoryService.getCategoryById(video.getMainClassId(), video.getSubClassId()));
                     }, taskExecutor);
                     userFuture.join();
                     categoryFuture.join();
@@ -287,10 +261,10 @@ public class VideoServiceImpl implements VideoService {
         Video finalVideo = video;
         CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
             map.put("user", userService.getUserByUId(finalVideo.getUid()));
-            map.put("stats", videoStatsService.getVideoStatsById(finalVideo.getVid()));
+            map.put("stats", videoStatsService.getStatsByVideoId(finalVideo.getVid()));
         }, taskExecutor);
         CompletableFuture<Void> categoryFuture = CompletableFuture.runAsync(() -> {
-            map.put("category", categoryService.getCategoryById(finalVideo.getMcId(), finalVideo.getScId()));
+            map.put("category", categoryService.getCategoryById(finalVideo.getMainClassId(), finalVideo.getSubClassId()));
         }, taskExecutor);
         map.put("video", video);
         // 使用join()等待userFuture和categoryFuture任务完成
@@ -328,11 +302,11 @@ public class VideoServiceImpl implements VideoService {
 
                     CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
                         map.put("user", userService.getUserByUId(video.getUid()));
-                        map.put("stats", videoStatsService.getVideoStatsById(video.getVid()));
+                        map.put("stats", videoStatsService.getStatsByVideoId(video.getVid()));
                     }, taskExecutor);
 
                     CompletableFuture<Void> categoryFuture = CompletableFuture.runAsync(() -> {
-                        map.put("category", categoryService.getCategoryById(video.getMcId(), video.getScId()));
+                        map.put("category", categoryService.getCategoryById(video.getMainClassId(), video.getSubClassId()));
                     }, taskExecutor);
 
                     userFuture.join();
