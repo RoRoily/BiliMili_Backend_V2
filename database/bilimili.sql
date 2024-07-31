@@ -232,7 +232,7 @@ CREATE TABLE `user` (
   `background` varchar(500) DEFAULT NULL COMMENT '主页背景图url',
   `gender` tinyint(4) NOT NULL DEFAULT '2' COMMENT '性别 0女 1男 2未知',
   `description` varchar(100) DEFAULT NULL COMMENT '个性签名',
-  `exp` int(11) NOT NULL DEFAULT '0' COMMENT '经验值',
+  experience int(11) NOT NULL DEFAULT '0' COMMENT '经验值',
   `coin` double NOT NULL DEFAULT '0' COMMENT '硬币数',
   #`vip` tinyint(4) NOT NULL DEFAULT '0' COMMENT '会员类型 0普通用户 1月度大会员 2季度大会员 3年度大会员',
   `state` tinyint(4) NOT NULL DEFAULT '0' COMMENT '状态 0正常 1封禁 2注销',
