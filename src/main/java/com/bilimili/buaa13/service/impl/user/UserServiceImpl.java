@@ -2,13 +2,13 @@ package com.bilimili.buaa13.service.impl.user;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.bilimili.buaa13.entity.ResponseResult;
-import com.bilimili.buaa13.mapper.FollowMapper;
-import com.bilimili.buaa13.mapper.UserMapper;
 import com.bilimili.buaa13.entity.Follow;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.User;
 import com.bilimili.buaa13.entity.VideoStats;
 import com.bilimili.buaa13.entity.dto.UserDTO;
+import com.bilimili.buaa13.mapper.FollowMapper;
+import com.bilimili.buaa13.mapper.UserMapper;
 import com.bilimili.buaa13.service.user.UserAccountService;
 import com.bilimili.buaa13.service.user.UserService;
 import com.bilimili.buaa13.service.video.VideoStatsService;
@@ -25,7 +25,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 @Slf4j
 @Service

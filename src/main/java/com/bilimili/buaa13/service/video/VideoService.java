@@ -12,22 +12,21 @@ public interface VideoService {
     /**
      * 根据id分页获取视频信息，包括用户和分区信息
      * @param videoList   要查询的视频数组
-     * @param index 分页页码 为空默认是1
+     * @param page 分页页码 为空默认是1
      * @param quantity  每一页查询的数量 为空默认是10
      * @return  包含用户信息、分区信息、视频信息的map列表
      */
-    List<Map<String, Object>> getVideosPageWithDataByVideoList(List<Video>videoList, Integer index, Integer quantity);
+    List<Map<String, Object>> getVideosDataWithPageByVideoList(List<Video>videoList, Integer page, Integer quantity);
 
     /**
-     * 按指定列（倒序）排序或者按给定id顺序排序，分页获取视频信息，
-     * 允许查询已删除的视频，已删除的视频信息会经过筛选处理
-     * @param idList   要查询的视频id列表，column为null时按该列表顺序排序
+     * 排序获取视频信息
+     * @param vidList   要查询的视频id列表，column为null时按该列表顺序排序
      * @param column    要排序的列   可选：null/"upload_date"/"play"/"good"/...
      * @param page  分页页码 从1开始
      * @param quantity  每一页查询的数量
-     * @return  包含用户信息、分区信息、视频信息的map顺序列表
+     * @return  map包含用户信息、分区信息、视频信息
      */
-    List<Map<String, Object>> getVideosWithDataByIdsOrderByDesc(List<Integer> idList, @Nullable String column, Integer page, Integer quantity);
+    List<Map<String, Object>> getVideosDataWithPageBySort(List<Integer> vidList, @Nullable String column, Integer page, Integer quantity);
 
     /**
      * 根据vid查询单个视频信息，包含用户信息和分区信息

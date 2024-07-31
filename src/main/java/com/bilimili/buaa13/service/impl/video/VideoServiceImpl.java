@@ -14,23 +14,14 @@ import com.bilimili.buaa13.service.video.VideoService;
 import com.bilimili.buaa13.service.video.VideoStatsService;
 import com.bilimili.buaa13.utils.ESUtil;
 import com.bilimili.buaa13.utils.OssUtil;
-import com.bilimili.buaa13.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.session.ExecutorType;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -54,45 +45,34 @@ public class VideoServiceImpl implements VideoService {
     private CurrentUser currentUser;
 
     @Autowired
-    private RedisUtil redisUtil;
-
-    @Autowired
     private OssUtil ossUtil;
 
     @Autowired
     private ESUtil esUtil;
 
-    @Autowired
-    private SqlSessionFactory sqlSessionFactory;
-
-    @Autowired
-    @Qualifier("taskExecutor")
-    private Executor taskExecutor;
-
     /**
      * 根据id分页获取视频信息，包括用户和分区信息
      * @param videoList   要查询的视频数组
-     * @param index 分页页码 为空默认是1
+     * @param page 分页页码 为空默认是1
      * @param quantity  每一页查询的数量 为空默认是10
      * @return  包含用户信息、分区信息、视频信息的map列表
      */
     @Override
-    public List<Map<String, Object>> getVideosPageWithDataByVideoList(List<Video> videoList, Integer index, Integer quantity) {
-        if (index == null) {
-            index = 1;
+    public List<Map<String, Object>> getVideosDataWithPageByVideoList(List<Video> videoList, Integer page, Integer quantity) {
+        if (page == null) {
+            page = 1;
         }
         if (quantity == null) {
             quantity = 10;
         }
-        int startIndex = (index - 1) * quantity;
+        int startIndex = (page - 1) * quantity;
         int endIndex = startIndex + quantity;
         // 检查数据是否足够满足分页查询
         if (startIndex > videoList.size()) {
             // 如果数据不足以填充当前分页，返回空列表
             return Collections.emptyList();
         }
-
-        // 直接数据库分页查询    （平均耗时 13ms）
+        // 直接数据库分页查询
         endIndex = Math.min(endIndex, videoList.size());
         List<Video> sublist = videoList.subList(startIndex, endIndex);
         sublist.removeIf(video -> video.getStatus() == 3);
@@ -100,134 +80,63 @@ public class VideoServiceImpl implements VideoService {
         if (videoList.isEmpty()) return Collections.emptyList();
         List<Map<String, Object>> mapList = new ArrayList<>();
         for(Video video : videoList) {
-            Map<String, Object> map = new HashMap<>();
-            map.put("video",video);
-            // 获取 user 和 stats 信息
-            map.put("user", userService.getUserByUId(video.getUid()));
-            map.put("stats", videoStatsService.getStatsByVideoId(video.getVid()));
-            // 获取 category 信息
-            map.put("category", categoryService.getCategoryById(video.getMainClassId(), video.getSubClassId()));
-
+            Map<String, Object> map = getVideoMap(video);
             mapList.add(map);
         }
         return mapList;
     }
 
     @Override
-    public List<Map<String, Object>> getVideosWithDataByIdsOrderByDesc(List<Integer> idList, @Nullable String column, Integer page, Integer quantity) {
-        // 使用事务批量操作 减少连接sql的开销
-        try (SqlSession sqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH)) {
-            List<Map<String, Object>> result;
-            if (column == null) {
-                // 如果没有指定排序列，就按idList排序
-                QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
-                queryWrapper.in("vid", idList);
-                List<Video> videos = videoMapper.selectList(queryWrapper);
-                if (videos.isEmpty()) {
-                    sqlSession.commit();
-                    return Collections.emptyList();
-                }
-                result = idList.stream().parallel().flatMap(vid -> {
-                    Map<String, Object> map = new HashMap<>();
-                    // 找到videos中为vid的视频
-                    Video video = videos.stream()
-                            .filter(v -> Objects.equals(v.getVid(), vid))
-                            .findFirst()
-                            .orElse(null);
-                    if (video == null) return Stream.empty(); // 跳过该项
-                    if (video.getStatus() == 3) {
-                        // 视频已删除
-                        Video video1 = new Video();
-                        video1.setVid(video.getVid());
-                        video1.setUid(video.getUid());
-                        video1.setStatus(video.getStatus());
-                        video1.setDeleteDate(video.getDeleteDate());
-                        map.put("video", video1);
-                        return Stream.of(map);
-                    }
-                    map.put("video", video);
-                    CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
-                        map.put("user", userService.getUserByUId(video.getUid()));
-                        map.put("stats", videoStatsService.getStatsByVideoId(video.getVid()));
-                    }, taskExecutor);
-                    CompletableFuture<Void> categoryFuture = CompletableFuture.runAsync(() -> {
-                        map.put("category", categoryService.getCategoryById(video.getMainClassId(), video.getSubClassId()));
-                    }, taskExecutor);
-                    userFuture.join();
-                    categoryFuture.join();
-                    return Stream.of(map);
-                }).collect(Collectors.toList());
-            } else if (Objects.equals(column, "upload_date")) {
-                // 如果按投稿日期排序，就先查video表
-                QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
-                queryWrapper.in("vid", idList).orderByDesc(column).last("LIMIT " + quantity + " OFFSET " + (page - 1) * quantity);
-                List<Video> list = videoMapper.selectList(queryWrapper);
-                if (list.isEmpty()) {
-                    sqlSession.commit();
-                    return Collections.emptyList();
-                }
-                result = list.stream().parallel().map(video -> {
-                    Map<String, Object> map = new HashMap<>();
-                    if (video.getStatus() == 3) {
-                        // 视频已删除
-                        Video video1 = new Video();
-                        video1.setVid(video.getVid());
-                        video1.setUid(video.getUid());
-                        video1.setStatus(video.getStatus());
-                        video1.setDeleteDate(video.getDeleteDate());
-                        map.put("video", video1);
-                        return map;
-                    }
-                    map.put("video", video);
-                    CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
-                        map.put("user", userService.getUserByUId(video.getUid()));
-                        map.put("stats", videoStatsService.getStatsByVideoId(video.getVid()));
-                    }, taskExecutor);
-                    CompletableFuture<Void> categoryFuture = CompletableFuture.runAsync(() -> {
-                        map.put("category", categoryService.getCategoryById(video.getMainClassId(), video.getSubClassId()));
-                    }, taskExecutor);
-                    userFuture.join();
-                    categoryFuture.join();
-                    return map;
-                }).collect(Collectors.toList());
-            } else {
-                // 否则按视频数据排序，就先查数据
-                QueryWrapper<VideoStats> queryWrapper = new QueryWrapper<>();
-                queryWrapper.in("vid", idList).orderByDesc(column).last("LIMIT " + quantity + " OFFSET " + (page - 1) * quantity);
-                List<VideoStats> list = videoStatsMapper.selectList(queryWrapper);
-                if (list.isEmpty()) {
-                    sqlSession.commit();
-                    return Collections.emptyList();
-                }
-                result = list.stream().parallel().map(videoStats -> {
-                    Map<String, Object> map = new HashMap<>();
-                    Video video = videoMapper.selectById(videoStats.getVid());
-                    if (video.getStatus() == 3) {
-                        // 视频已删除
-                        Video video1 = new Video();
-                        video1.setVid(video.getVid());
-                        video1.setUid(video.getUid());
-                        video1.setStatus(video.getStatus());
-                        video1.setDeleteDate(video.getDeleteDate());
-                        map.put("video", video1);
-                        return map;
-                    }
-                    map.put("video", video);
-                    map.put("stats", videoStats);
-                    CompletableFuture<Void> userFuture = CompletableFuture.runAsync(() -> {
-                        map.put("user", userService.getUserByUId(video.getUid()));
-                    }, taskExecutor);
-                    CompletableFuture<Void> categoryFuture = CompletableFuture.runAsync(() -> {
-                        map.put("category", categoryService.getCategoryById(video.getMainClassId(), video.getSubClassId()));
-                    }, taskExecutor);
-                    userFuture.join();
-                    categoryFuture.join();
-                    return map;
-                }).collect(Collectors.toList());
+    public List<Map<String, Object>> getVideosDataWithPageBySort(List<Integer> vidList, @Nullable String column, Integer page, Integer quantity) {
+        List<Map<String, Object>> videoMapList = new ArrayList<>();
+        if (column == null) {
+            // 如果没有指定排序列，就按vidList排序
+            QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
+            queryWrapper.in("vid", vidList);
+            List<Video> videos = videoMapper.selectList(queryWrapper);
+            if (videos.isEmpty()) {
+                return Collections.emptyList();
             }
-            sqlSession.commit();
-            return result;
+
+            for(Integer vid : vidList) {
+                Video video = null;
+                for(Video video1 : videos) {
+                    if (vid.equals(video1.getVid())) {
+                        video = video1;
+                        break;
+                    }
+                }
+                if (video == null) {continue;}
+                Map<String, Object> map = getVideoMap(video);
+                videoMapList.add(map);
+            }
+        } else if (column.equals("upload_date")) {
+            // 按投稿日期排序，就先查video表
+            QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
+            queryWrapper.in("vid", vidList).orderByDesc(column).last("LIMIT " + quantity + " OFFSET " + (page - 1) * quantity);
+            List<Video> videoList = videoMapper.selectList(queryWrapper);
+            if (videoList.isEmpty()) {
+                return Collections.emptyList();
+            }
+            for(Video video : videoList) {
+                Map<String, Object> map = getVideoMap(video);
+                videoMapList.add(map);
+            }
+        } else {
+            // 按视频数据排序，就先查videoStats表
+            QueryWrapper<VideoStats> queryWrapper = new QueryWrapper<>();
+            queryWrapper.in("vid", vidList).orderByDesc(column).last("LIMIT " + quantity + " OFFSET " + (page - 1) * quantity);
+            List<VideoStats> videoStatsList = videoStatsMapper.selectList(queryWrapper);
+            if (videoStatsList.isEmpty()) {
+                return Collections.emptyList();
+            }
+            for(VideoStats videoStats : videoStatsList) {
+                Video video = videoMapper.selectById(videoStats.getVid());
+                Map<String, Object> map = getVideoMap(video);
+                videoMapList.add(map);
+            }
         }
+        return videoMapList;
     }
 
     /**
@@ -237,7 +146,6 @@ public class VideoServiceImpl implements VideoService {
      */
     @Override
     public Map<String, Object> getVideoWithDataByVideoId(Integer vid) {
-        Map<String, Object> map = new HashMap<>();
         QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("vid", vid).ne("status", 3);
         Video video = videoMapper.selectOne(queryWrapper);
@@ -250,11 +158,7 @@ public class VideoServiceImpl implements VideoService {
         } else  {
             return null;
         }*/
-        map.put("video", video);
-        map.put("user", userService.getUserByUId(video.getUid()));
-        map.put("stats", videoStatsService.getStatsByVideoId(video.getVid()));
-        map.put("category", categoryService.getCategoryById(video.getMainClassId(), video.getSubClassId()));
-        return map;
+        return getVideoMap(video);
     }
 
     /**
@@ -271,7 +175,6 @@ public class VideoServiceImpl implements VideoService {
         if (videos.isEmpty()) return Collections.emptyList();
         List<Map<String, Object>> mapList = new ArrayList<>();
         for(Integer vid:list){
-            Map<String, Object> map = new HashMap<>();
             Video video = null;
             for(Video video0 :videos){
                 if(video0.getVid().equals(vid)){
@@ -280,16 +183,7 @@ public class VideoServiceImpl implements VideoService {
                 }
             }
             if(video==null){continue;}
-            try{
-                map.put("video", video);
-                map.put("user", userService.getUserByUId(video.getUid()));
-                map.put("stats", videoStatsService.getStatsByVideoId(video.getVid()));
-                map.put("category", categoryService.getCategoryById(video.getMainClassId(), video.getSubClassId()));
-            }
-            catch (Exception e){
-                e.printStackTrace();
-                continue;
-            }
+            Map<String, Object> map = getVideoMap(video);
             mapList.add(map);
         }
         return mapList;
@@ -306,18 +200,18 @@ public class VideoServiceImpl implements VideoService {
     public ResponseResult changeVideoStatus(Integer vid, Integer status) throws IOException {
         ResponseResult responseResult = new ResponseResult();
         Integer userId = currentUser.getUserId();
+        QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("vid", vid).ne("status", 3);
+        Video video = videoMapper.selectOne(queryWrapper);
+        if (video == null) {
+            responseResult.setCode(404);
+            responseResult.setMessage("视频不见了QAQ");
+            return responseResult;
+        }
         if (status == 1 || status == 2) {
             if (!currentUser.isAdmin()) {
                 responseResult.setCode(403);
                 responseResult.setMessage("您不是管理员，无权访问");
-                return responseResult;
-            }
-            QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("vid", vid).ne("status", 3);
-            Video video = videoMapper.selectOne(queryWrapper);
-            if (video == null) {
-                responseResult.setCode(404);
-                responseResult.setMessage("视频不见了QAQ");
                 return responseResult;
             }
             //注释Redis
@@ -349,20 +243,12 @@ public class VideoServiceImpl implements VideoService {
             }
 
         } else if (status == 3) {
-            QueryWrapper<Video> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("vid", vid).ne("status", 3);
-            Video video = videoMapper.selectOne(queryWrapper);
-            if (video == null) {
-                responseResult.setCode(404);
-                responseResult.setMessage("视频不见了QAQ");
-                return responseResult;
-            }
             if (video.getUid().equals(userId) || currentUser.isAdmin()) {
                 String videoUrl = video.getVideoUrl();
                 String videoName = videoUrl.split("aliyuncs.com/")[1];  // OSS视频文件名
                 String coverUrl = video.getCoverUrl();
                 String coverName = coverUrl.split("aliyuncs.com/")[1];  // OSS封面文件名
-                Integer lastStatus = video.getStatus();
+                //Integer lastStatus = video.getStatus();
                 UpdateWrapper<Video> updateWrapper = new UpdateWrapper<>();
                 updateWrapper.eq("vid", vid).set("status", 3).set("delete_date", new Date());     // 更新视频状态已删除
                 int flag = videoMapper.update(null, updateWrapper);
@@ -405,5 +291,36 @@ public class VideoServiceImpl implements VideoService {
         responseResult.setCode(500);
         responseResult.setMessage("更新状态失败");
         return responseResult;
+    }
+
+    /**
+     * 获取video相关的map，便于数据传输，暂时仅用于VideoService
+     * @param video 视频类
+     * @return 相关信息的map
+     */
+
+    private Map<String,Object> getVideoMap(Video video){
+        Map<String,Object> map = new HashMap<>();
+        if (video.getStatus() == 3) {
+            // 视频已删除
+            Video video1 = new Video();
+            video1.setVid(video.getVid());
+            video1.setUid(video.getUid());
+            video1.setStatus(video.getStatus());
+            video1.setDeleteDate(video.getDeleteDate());
+            map.put("video", video1);
+        }
+        else{
+            try{
+                map.put("video", video);
+                map.put("user", userService.getUserByUId(video.getUid()));
+                map.put("stats", videoStatsService.getStatsByVideoId(video.getVid()));
+                map.put("category", categoryService.getCategoryById(video.getMainClassId(), video.getSubClassId()));
+            }
+            catch (Exception e){
+                log.error(e.getMessage(),e);
+            }
+        }
+        return map;
     }
 }

@@ -1,10 +1,10 @@
 package com.bilimili.buaa13.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.bilimili.buaa13.entity.ResponseResult;
-import com.bilimili.buaa13.mapper.FavoriteVideoMapper;
 import com.bilimili.buaa13.entity.FavoriteVideo;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.Video;
+import com.bilimili.buaa13.mapper.FavoriteVideoMapper;
 import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.service.video.VideoService;
@@ -71,7 +71,7 @@ public class VideoController {
         count = Math.min(count, allVideos.size());
         List<Video> randomVideos = videoMapper.selectCountVideoByRandom(1,count);
         if (randomVideos != null && !randomVideos.isEmpty()) {
-            videoList = videoService.getVideosPageWithDataByVideoList(randomVideos, 1, count);
+            videoList = videoService.getVideosDataWithPageByVideoList(randomVideos, 1, count);
             // 随机打乱列表顺序
             Collections.shuffle(videoList);
         }
@@ -132,7 +132,7 @@ public class VideoController {
         queryWrapper.in("vid", randomVid);
         List<Video> randomVideos = videoMapper.selectList(queryWrapper);
         if (!randomVideos.isEmpty()) {
-            videoList = videoService.getVideosPageWithDataByVideoList(randomVideos, 1, 10);
+            videoList = videoService.getVideosDataWithPageByVideoList(randomVideos, 1, 10);
             Collections.shuffle(videoList);     // 随机打乱列表顺序
         }
         System.out.println("videoList again:" + videoList.size());
@@ -209,16 +209,16 @@ public class VideoController {
         map.put("count", set.size());
         switch (rule) {
             case 1:
-                map.put("list", videoService.getVideosWithDataByIdsOrderByDesc(list, "upload_date", page, quantity));
+                map.put("list", videoService.getVideosDataWithPageBySort(list, "upload_date", page, quantity));
                 break;
             case 2:
-                map.put("list", videoService.getVideosWithDataByIdsOrderByDesc(list, "play", page, quantity));
+                map.put("list", videoService.getVideosDataWithPageBySort(list, "play", page, quantity));
                 break;
             case 3:
-                map.put("list", videoService.getVideosWithDataByIdsOrderByDesc(list, "good", page, quantity));
+                map.put("list", videoService.getVideosDataWithPageBySort(list, "good", page, quantity));
                 break;
             default:
-                map.put("list", videoService.getVideosWithDataByIdsOrderByDesc(list, "upload_date", page, quantity));
+                map.put("list", videoService.getVideosDataWithPageBySort(list, "upload_date", page, quantity));
         }
         responseResult.setData(map);
         return responseResult;
@@ -245,7 +245,7 @@ public class VideoController {
         set.forEach(vid -> {
             list.add((Integer) vid);
         });
-        responseResult.setData(videoService.getVideosWithDataByIdsOrderByDesc(list, null, 1, list.size()));
+        responseResult.setData(videoService.getVideosDataWithPageBySort(list, null, 1, list.size()));
         return responseResult;
     }
 
@@ -269,7 +269,7 @@ public class VideoController {
         set.forEach(vid -> {
             list.add((Integer) vid);
         });
-        responseResult.setData(videoService.getVideosWithDataByIdsOrderByDesc(list, null, 1, list.size()));
+        responseResult.setData(videoService.getVideosDataWithPageBySort(list, null, 1, list.size()));
         return responseResult;
     }
 
@@ -304,16 +304,16 @@ public class VideoController {
         List<Map<String, Object>> result;
         switch (rule) {
             case 1:
-                result = videoService.getVideosWithDataByIdsOrderByDesc(list, null, page, quantity);
+                result = videoService.getVideosDataWithPageBySort(list, null, page, quantity);
                 break;
             case 2:
-                result = videoService.getVideosWithDataByIdsOrderByDesc(list, "play", page, quantity);
+                result = videoService.getVideosDataWithPageBySort(list, "play", page, quantity);
                 break;
             case 3:
-                result = videoService.getVideosWithDataByIdsOrderByDesc(list, "upload_date", page, quantity);
+                result = videoService.getVideosDataWithPageBySort(list, "upload_date", page, quantity);
                 break;
             default:
-                result = videoService.getVideosWithDataByIdsOrderByDesc(list, null, page, quantity);
+                result = videoService.getVideosDataWithPageBySort(list, null, page, quantity);
         }
         if (result.size() == 0) {
             responseResult.setData(result);

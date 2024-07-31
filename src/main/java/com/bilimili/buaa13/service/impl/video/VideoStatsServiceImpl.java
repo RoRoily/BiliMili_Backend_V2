@@ -1,15 +1,11 @@
 package com.bilimili.buaa13.service.impl.video;
 
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.bilimili.buaa13.mapper.VideoStatsMapper;
 import com.bilimili.buaa13.entity.VideoStats;
+import com.bilimili.buaa13.mapper.VideoStatsMapper;
 import com.bilimili.buaa13.service.video.VideoStatsService;
-import com.bilimili.buaa13.utils.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-
-import java.util.concurrent.*;
 
 @Service
 public class VideoStatsServiceImpl implements VideoStatsService {
