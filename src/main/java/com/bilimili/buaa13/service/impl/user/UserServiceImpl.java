@@ -150,7 +150,7 @@ public class UserServiceImpl implements UserService {
                     user.getBackground(),
                     user.getGender(),
                     user.getDescription(),
-                    user.getExp(),
+                    user.getExperience(),
                     user.getCoin(),
                     user.getState(),
                     0,0,0,0,0

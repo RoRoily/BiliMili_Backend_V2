@@ -462,7 +462,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         userDTO.setBackground_url(user.getBackground());
         userDTO.setGender(user.getGender());
         userDTO.setDescription(user.getDescription());
-        userDTO.setExp(user.getExp());
+        userDTO.setExperience(user.getExperience());
         userDTO.setCoin(user.getCoin());
         userDTO.setState(user.getState());
         return userDTO;
@@ -479,7 +479,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         userDTO.setBackground_url("https://tinypic.host/images/2023/11/15/69PB2Q5W9D2U7L.png");
         userDTO.setGender(2);
         userDTO.setDescription("-");
-        userDTO.setExp(0);
+        userDTO.setExperience(0);
         userDTO.setCoin((double) 0);
         userDTO.setVideoCount(0);
         userDTO.setFollowsCount(0);
