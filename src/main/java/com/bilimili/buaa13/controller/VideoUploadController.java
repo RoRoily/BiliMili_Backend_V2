@@ -24,7 +24,7 @@ public class VideoUploadController {
      */
     @GetMapping("/video/ask-chunk")
     public ResponseResult askChunk(@RequestParam("hash") String hash) {
-        return videoUploadService.askCurrentChunk(hash);
+        return videoUploadService.getNextCurrentFragment(hash);
     }
 
     /**
@@ -40,7 +40,7 @@ public class VideoUploadController {
                                       @RequestParam("hash") String hash,
                                       @RequestParam("index") Integer index) throws IOException {
         try {
-            return videoUploadService.uploadChunk(chunk, hash, index);
+            return videoUploadService.uploadFragment(chunk, hash, index);
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseResult(500, "分片上传失败", null);
@@ -55,7 +55,7 @@ public class VideoUploadController {
      */
     @GetMapping("/video/cancel-upload")
     public ResponseResult cancelUpload(@RequestParam("hash") String hash) {
-        return videoUploadService.cancelUpload(hash);
+        return videoUploadService.cancelUploadAndDelete(hash);
     }
 
     /**
@@ -85,7 +85,7 @@ public class VideoUploadController {
                                    @RequestParam("descr") String descr) {
         VideoUploadInfoDTO videoUploadInfoDTO = new VideoUploadInfoDTO(null, hash, title, type, auth, duration, mcid, scid, tags, descr, null);
         try {
-            return videoUploadService.addVideo(cover, videoUploadInfoDTO);
+            return videoUploadService.setVideoMessage(cover, videoUploadInfoDTO);
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseResult(500, "封面上传失败", null);

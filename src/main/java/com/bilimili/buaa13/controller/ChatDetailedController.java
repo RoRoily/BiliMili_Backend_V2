@@ -21,7 +21,7 @@ public class ChatDetailedController {
      * 获取更多历史消息记录
      * @param uid   聊天对象的UID
      * @param offset    偏移量，即已经获取过的消息数量，从哪条开始获取更多
-     * @return  CustomResponse对象，包含更多消息记录的map
+     * @return  响应对象，包含更多消息记录的map
      */
     @GetMapping("/msg/chat-detailed/get-more")
     public ResponseResult getMoreChatDetails(@RequestParam("uid") Integer uid,
@@ -35,7 +35,7 @@ public class ChatDetailedController {
     /**
      * 删除消息
      * @param id    消息ID
-     * @return  CustomResponse对象
+     * @return  响应对象
      */
     @PostMapping("/msg/chat-detailed/delete")
     public ResponseResult delDetail(@RequestParam("id") Integer id) {

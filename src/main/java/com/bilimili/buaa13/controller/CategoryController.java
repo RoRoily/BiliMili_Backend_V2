@@ -13,7 +13,7 @@ public class CategoryController {
 
     /**
      * 获取全部分区接口
-     * @return CustomResponse对象
+     * @return 响应对象
      */
     @GetMapping("/category/getall")
     public ResponseResult getAll() {

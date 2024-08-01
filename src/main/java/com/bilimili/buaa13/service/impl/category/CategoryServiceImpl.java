@@ -32,7 +32,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * 获取全部分区数据
-     * @return CustomResponse对象
+     * @return 响应对象
      */
     @Override
     public ResponseResult getAll() {

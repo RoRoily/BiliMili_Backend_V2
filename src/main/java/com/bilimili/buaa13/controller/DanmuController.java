@@ -25,7 +25,7 @@ public class DanmuController {
     /**
      * 获取弹幕列表
      * @param vid   视频ID
-     * @return  CustomResponse对象
+     * @return  响应对象
      */
     @GetMapping("/danmu-list/{vid}")
     public ResponseResult getDanmuList(@PathVariable("vid") String vid) {

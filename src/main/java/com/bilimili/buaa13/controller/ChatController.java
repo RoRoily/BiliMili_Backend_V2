@@ -28,7 +28,7 @@ public class ChatController {
     /**
      * 新建一个聊天，与其他用户首次聊天时调用
      * @param uid  对方用户ID
-     * @return  CustomResponse对象 message可能值："新创建"/"已存在"/"未知用户"
+     * @return  响应对象 message可能值："新创建"/"已存在"/"未知用户"
      */
     @GetMapping("/msg/chat/create/{uid}")
     public ResponseResult createChat(@PathVariable("uid") Integer uid) {
@@ -47,7 +47,7 @@ public class ChatController {
     /**
      * 获取用户最近的聊天列表
      * @param offset    分页偏移量（前端查询了多少个聊天）
-     * @return  CustomResponse对象 包含带用户信息和最近一条消息的聊天列表以及是否还有更多数据
+     * @return  响应对象 包含带用户信息和最近一条消息的聊天列表以及是否还有更多数据
      */
     @GetMapping("/msg/chat/recent-list")
     public ResponseResult getRecentList(@RequestParam("offset") Long offset) {
@@ -68,7 +68,7 @@ public class ChatController {
     /**
      * 移除聊天
      * @param uid  对方用户ID
-     * @return  CustomResponse对象
+     * @return  响应对象
      */
     @GetMapping("/msg/chat/delete/{uid}")
     public ResponseResult deleteChat(@PathVariable("uid") Integer uid) {

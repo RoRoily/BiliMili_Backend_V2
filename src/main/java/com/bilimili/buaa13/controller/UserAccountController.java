@@ -24,7 +24,7 @@ public class UserAccountController {
     /**
      * 注册接口
      * @param map 包含 username password confirmedPassword 的 map
-     * @return CustomResponse对象
+     * @return 响应对象
      */
     // 前端使用axios传递的data是Content-Type: application/json，需要用@RequestBody获取参数
     @PostMapping("/user/account/register")
@@ -49,7 +49,7 @@ public class UserAccountController {
     /**
      * 登录接口
      * @param map 包含 username password 的 map
-     * @return CustomResponse对象
+     * @return 响应对象
      */
     @PostMapping("/user/account/login")
     public ResponseResult login(@RequestBody Map<String, String> map) {
@@ -61,7 +61,7 @@ public class UserAccountController {
     /**
      * 管理员登录接口
      * @param map 包含 username password 的 map
-     * @return CustomResponse对象
+     * @return 响应对象
      */
     @PostMapping("/admin/account/login")
     public ResponseResult adminLogin(@RequestBody Map<String, String> map) {
@@ -72,7 +72,7 @@ public class UserAccountController {
 
     /**
      * 获取当前登录用户信息接口
-     * @return CustomResponse对象
+     * @return 响应对象
      */
     @GetMapping("/user/personal/info")
     public ResponseResult personalInfo() {
@@ -81,7 +81,7 @@ public class UserAccountController {
 
     /**
      * 获取当前登录管理员信息接口
-     * @return CustomResponse对象
+     * @return 响应对象
      */
     @GetMapping("/admin/personal/info")
     public ResponseResult adminPersonalInfo() {

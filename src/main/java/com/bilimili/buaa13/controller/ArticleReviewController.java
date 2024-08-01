@@ -25,7 +25,7 @@ public class ArticleReviewController {
      */
     @GetMapping("/review/article/total")
     public ResponseResult getTotalArticle(@RequestParam("astatus") Integer status) {
-        return articleReviewService.getTotalByStatus(status);
+        return articleReviewService.getTotalNumberByStatus(status);
     }
 
     /**

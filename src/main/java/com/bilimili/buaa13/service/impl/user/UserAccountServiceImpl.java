@@ -77,7 +77,7 @@ public class UserAccountServiceImpl implements UserAccountService {
      * @param account 账号
      * @param password 密码
      * @param confirmedPassword 确认密码
-     * @return CustomResponse对象
+     * @return 响应对象
      * 7/30 10：30
      */
     @Override
@@ -219,7 +219,7 @@ public class UserAccountServiceImpl implements UserAccountService {
      * 用户登录
      * @param account 账号
      * @param password 密码
-     * @return CustomResponse对象
+     * @return 响应对象
      * 7/30 10：30
      */
     @Override
@@ -265,7 +265,7 @@ public class UserAccountServiceImpl implements UserAccountService {
      * 管理员登录
      * @param account 账号
      * @param password 密码
-     * @return CustomResponse对象
+     * @return 响应对象
      * 7/30 10：30
      */
     @Override
@@ -308,7 +308,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     /**
      * 获取用户个人信息
-     * @return CustomResponse对象
+     * @return 响应对象
      */
     @Override
     public ResponseResult personalInformation() {
@@ -325,7 +325,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     /**
      * 获取管理员个人信息
-     * @return CustomResponse对象
+     * @return 响应对象
      */
     @Override
     public ResponseResult adminPersonalInformation() {

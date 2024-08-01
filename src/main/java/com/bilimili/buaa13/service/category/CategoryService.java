@@ -6,7 +6,7 @@ import com.bilimili.buaa13.entity.ResponseResult;
 public interface CategoryService {
     /**
      * 获取全部分区数据
-     * @return CustomResponse对象
+     * @return 响应对象
      */
     ResponseResult getAll();
 
