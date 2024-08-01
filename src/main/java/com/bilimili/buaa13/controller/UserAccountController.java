@@ -2,6 +2,8 @@ package com.bilimili.buaa13.controller;
 
 import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.service.user.UserAccountService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,10 +12,11 @@ import java.util.Map;
 @RestController
 public class UserAccountController {
 
+    private static final Logger log = LoggerFactory.getLogger(UserAccountController.class);
     @Autowired
     private UserAccountService userAccountService;
 
-    public static boolean isValidPassword(String password) {
+    private static boolean isValidPassword(String password) {
         // 正则表达式: ^ 表示开始, [a-zA-Z0-9]{6,14} 表示6到14位的字母或数字, $ 表示结束
         String regex = "^[a-zA-Z0-9]{6,14}$";
 
@@ -38,7 +41,7 @@ public class UserAccountController {
         try {
             return userAccountService.register(username, password, confirmedPassword);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
             ResponseResult responseResult = new ResponseResult();
             responseResult.setCode(500);
             responseResult.setMessage("ERROR");

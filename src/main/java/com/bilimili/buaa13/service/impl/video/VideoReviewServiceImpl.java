@@ -16,9 +16,6 @@ import java.util.*;
 public class VideoReviewServiceImpl implements VideoReviewService {
 
     @Autowired
-    private RedisUtil redisUtil;
-
-    @Autowired
     private CurrentUser currentUser;
 
     @Autowired
