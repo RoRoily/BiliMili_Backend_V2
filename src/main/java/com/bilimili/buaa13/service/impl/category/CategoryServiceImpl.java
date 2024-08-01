@@ -42,7 +42,7 @@ public class CategoryServiceImpl implements CategoryService {
         // 尝试从redis中获取数据
         try {
             sortedCategories = redisUtil.getAllList("categoryList", CategoryDTO.class);
-            if (sortedCategories.size() != 0) {
+            if (!sortedCategories.isEmpty()) {
                 responseResult.setData(sortedCategories);
                 return responseResult;
             }

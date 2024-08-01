@@ -41,8 +41,6 @@ public class ArticleController {
     private ArticleService articleService;
 
     @Autowired
-    private UserService userService;
-    @Autowired
     private VideoStatsMapper videoStatsMapper;
 
     @Autowired
@@ -51,12 +49,6 @@ public class ArticleController {
     @Autowired
     private FavoriteVideoService favoriteVideoService;
 
-    @Autowired
-    private CommentService commentService;
-    @Autowired
-    private CurrentUser currentUser;
-    @Autowired
-    private RedisUtil redisUtil;
     @Autowired
     private ArticleMapper articleMapper;
 

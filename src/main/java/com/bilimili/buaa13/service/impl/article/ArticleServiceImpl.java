@@ -22,8 +22,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Executor;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -135,7 +133,7 @@ public class ArticleServiceImpl implements ArticleService {
             // 如果数据不足以填充当前分页，返回空列表
             return Collections.emptyList();
         }
-        List<Article> articleList = new ArrayList<>();
+        List<Article> articleList;
 
         // 直接数据库分页查询    （平均耗时 13ms）
         List<Object> idList = new ArrayList<>(set);
@@ -160,7 +158,7 @@ public class ArticleServiceImpl implements ArticleService {
      */
 
     @Override
-    public ResponseResult updateArticleStatus(Integer aid, Integer status) throws IOException {
+    public ResponseResult updateArticleStatus(Integer aid, Integer status) {
         ResponseResult responseResult = new ResponseResult();
         Integer userId = currentUser.getUserId();
         if (status == 1 || status == 2) {

@@ -19,7 +19,6 @@ import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -30,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.Executor;
 
 @Slf4j
 @Service
@@ -67,10 +65,6 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Autowired
     private AuthenticationProvider authenticationProvider;
-
-    @Autowired
-    @Qualifier("taskExecutor")
-    private Executor taskExecutor;
 
     /**
      * 用户注册
@@ -187,7 +181,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     /**
      * 获取当前登录的用户
      */
-    Map<String,Object>getLoginUser(String account, String password){
+    private Map<String,Object>getLoginUser(String account, String password){
         Map<String,Object> map = new HashMap<>();
         ResponseResult responseResult = new ResponseResult();
 

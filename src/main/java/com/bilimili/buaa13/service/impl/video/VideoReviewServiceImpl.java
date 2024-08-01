@@ -6,7 +6,6 @@ import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.service.video.VideoReviewService;
 import com.bilimili.buaa13.service.video.VideoService;
-import com.bilimili.buaa13.utils.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -179,7 +179,7 @@ public class VideoUploadServiceImpl implements VideoUploadService {
     @Override
     @Transactional
     public void mergeFragments(VideoUploadInfoDTO videoUploadInfoDTO) throws IOException {
-        String url = ossUtil.appendUploadVideo(videoUploadInfoDTO.getHash());; // 视频最终的URL
+        String url = ossUtil.appendUploadVideo(videoUploadInfoDTO.getHash()); // 视频最终的URL
         if (url == null) {
             log.warn("OSS URL 为空，合并操作终止");
             return;
