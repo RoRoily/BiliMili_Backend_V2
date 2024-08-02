@@ -72,62 +72,99 @@ public class UserCommentServiceImpl implements UserCommentService {
     public void setUserUpVoteOrDownVote(Integer uid, Integer id, boolean isLike, boolean isCancel) {
         Boolean likeExist = redisUtil.isMember("upVote:" + uid, id);
         Boolean dislikeExist = redisUtil.isMember("downVote:" + uid, id);
-
-        // 点赞
-        if (isLike && !isCancel) {
-            // 原本就点了赞
-            if (likeExist) {
+        //理论上，likeExist和disLikeExist不能同时存在,所以相加不等于2
+        if(boolChangeBinary(likeExist) + boolChangeBinary(dislikeExist) == 1 ){
+            //以likeExist为基准，要么like要么dislike
+            int judgeNumber = (boolChangeBinary(likeExist)<<2) | (boolChangeBinary(isLike)<< 1) | boolChangeBinary(isCancel);
+            if(judgeNumber == 6){
+                //点赞，并且不是取消，原本已经点赞
                 return;
             }
-            // 添加点赞记录
-            redisUtil.addMember("upVote:" + uid, id);
-            // 原本点了踩，就要取消踩
-            if (dislikeExist) {
-                // 1.redis中删除点踩记录
-                redisUtil.delMember("downVote:" + uid, id);
-                // 2. 数据库中更改评论的点赞点踩数
-                commentService.updateLikeAndDisLike(id, true);
-
-            } else {
-                // 原来没点踩，只需要点赞, 这里只更新评论的点赞数
-                commentService.updateComment(id, "love", true, 1);
+            else if(judgeNumber == 7){
+                //已经点赞，现在需要取消
+                // 移除点赞记录
+                redisUtil.delMember("upVote:" + uid, id);
+                // 更新评论点赞数
+                commentService.updateComment(id, "love", false, 1);
             }
-        } else if (isLike) {// 取消点赞
-            if (!likeExist) {
-                // 原本就没有点赞，直接返回
+            else if(judgeNumber == 5){
+                //以前点了赞，现在需要取消踩。不需要取消
                 return;
             }
-            // 移除点赞记录
-            redisUtil.delMember("upVote:" + uid, id);
-            // 更新评论点赞数
-            commentService.updateComment(id, "love", false, 1);
-        } else if (!isCancel) {
-            // 点踩
-            if (dislikeExist) {
-                // 原本就点了踩，直接返回
-                return;
-            }
-            // 更新用户点踩记录
-            redisUtil.addMember("downVote:" + uid, id);
-            if (likeExist) {
+            else if(judgeNumber == 4){
+                //以前点了赞，现在需要点踩
+                // 更新用户点踩记录
+                redisUtil.addMember("downVote:" + uid, id);
                 // 原本点了赞，要取消赞
                 redisUtil.delMember("upVote:" + uid, id);
                 // 更新评论点赞点踩的记录
                 commentService.updateLikeAndDisLike(id, false);
-            } else {
-                // 原本没有点赞，直接点踩，更新评论点踩数量
-                commentService.updateComment(id, "bad", true, 1);
             }
-        } else {
-            // 取消点踩
-            if (!dislikeExist) {
-                // 原本就没有点踩直接返回
+            else if(judgeNumber == 3){
+                //原本点了踩，现在需要取消点赞，直接返回
                 return;
             }
-            // 取消用户点踩记录
-            redisUtil.delMember("downVote:" + uid, id);
-            // 更新评论点踩数量
-            commentService.updateComment(id, "bad", false, 1);
+            else if(judgeNumber == 2){
+                //原本点了踩，现在需要点赞
+                // 添加点赞记录
+                redisUtil.addMember("upVote:" + uid, id);
+                // 原本点了踩，就要取消踩
+                // 1.redis中删除点踩记录
+                redisUtil.delMember("downVote:" + uid, id);
+                // 2. 数据库中更改评论的点赞点踩数
+                commentService.updateLikeAndDisLike(id, true);
+            }
+            else if(judgeNumber == 1){
+                //原本点了踩，现在需要取消踩
+                // 取消用户点踩记录
+                redisUtil.delMember("downVote:" + uid, id);
+                // 更新评论点踩数量
+                commentService.updateComment(id, "bad", false, 1);
+            }
+            else if (judgeNumber == 0){
+                //原本点了踩，现在还要点踩，直接返回
+                return;
+            }
+            else {
+                //不应当出现其他情况，抛出报错信息
+                System.out.println("点赞相关数值判断出现错误，请检查函数setUserUpVoteOrDownVote");
+                return;
+            }
         }
+        else if(boolChangeBinary(likeExist) + boolChangeBinary(dislikeExist) == 0 ){
+            //以前没点过赞，没点过踩，只用判断后两位即可
+            int judgeNumber = (boolChangeBinary(isLike)<< 1) | boolChangeBinary(isCancel);
+            switch (judgeNumber) {
+                case 0:
+                    //选中点踩
+                    // 原本没有点赞，直接点踩，更新评论点踩数量
+                    // 添加点踩记录
+                    redisUtil.addMember("downVote:" + uid, id);
+                    commentService.updateComment(id, "bad", true, 1);
+                    break;
+                case 1:
+                    //取消点踩,以前没有点踩，直接过
+                    break;
+                case 2:
+                    //点赞,但是原本没有点赞
+                    // 添加点赞记录
+                    redisUtil.addMember("upVote:" + uid, id);
+                    // 原来没点踩，只需要点赞, 这里只更新评论的点赞数
+                    commentService.updateComment(id, "love", true, 1);
+                    break;
+                case 3:
+                    //取消点赞，以前没有点赞，直接过
+                    break;
+            }
+        }
+    }
+
+    /**
+     * 转换
+     * @param boolNumber bool变量
+     * @return 二进制数
+     */
+    private Integer boolChangeBinary(boolean boolNumber){
+        return boolNumber?1:0;
     }
 }
