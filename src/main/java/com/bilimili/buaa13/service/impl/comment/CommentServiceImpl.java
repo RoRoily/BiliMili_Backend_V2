@@ -62,13 +62,12 @@ public class CommentServiceImpl implements CommentService {
         List<Comment> rootComments = getRootCommentsByVid(vid, offset, type);
 
         // 并行执行每个根级评论的子评论查询任务
-        List<CommentTree> commentTreeList = rootComments.stream().parallel()
-                .map(rootComment ->buildCommentTree(rootComment, 0L, 2L))
-                .collect(Collectors.toList());
 
 //        System.out.println(commentTreeList);
 
-        return commentTreeList;
+        return rootComments.stream().parallel()
+                .map(rootComment ->buildCommentTree(rootComment, 0L, 2L))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -123,7 +122,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public CommentTree sendComment(Integer vid, Integer uid, Integer rootId, Integer parentId, Integer toUserId, String content) {
-        if (content == null || content.length() == 0 || content.length() > 2000) return null;
+        if (content == null || content.isEmpty() || content.length() > 2000) return null;
         Comment comment = new Comment(
                 null,
                 vid,
@@ -289,6 +288,7 @@ public class CommentServiceImpl implements CommentService {
 
     /**
      * 同时相对更新点赞和点踩
+     * 用于原本点踩了，现在直接点赞，一次改完。
      * @param id    评论id
      * @param addLike   true 点赞 false 点踩
      */

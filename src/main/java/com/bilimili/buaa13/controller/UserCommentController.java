@@ -30,7 +30,7 @@ public class UserCommentController {
 
         ResponseResult response = new ResponseResult();
         response.setCode(200);
-        response.setData(userCommentService.getUserLikeAndDislike(uid));
+        response.setData(userCommentService.getUserUpVoteAndDownVote(uid));
 
         return response;
     }
@@ -39,14 +39,14 @@ public class UserCommentController {
      * 点赞或点踩某条评论
      * @param id    评论id
      * @param isLike true 赞 false 踩
-     * @param isSet  true 点 false 取消
+     * @param isCancel  true 取消 false 点中
      */
     @PostMapping("/comment/love-or-not")
     public ResponseResult loveOrNot(@RequestParam("id") Integer id,
                                     @RequestParam("isLike") boolean isLike,
-                                    @RequestParam("isSet") boolean isSet) {
+                                    @RequestParam("isCancel") boolean isCancel) {
         Integer uid = currentUser.getUserId();
-        userCommentService.userSetLikeOrUnlike(uid, id, isLike, isSet);
+        userCommentService.setUserUpVoteOrDownVote(uid, id, isLike, isCancel);
         return new ResponseResult();
     }
 
@@ -58,7 +58,7 @@ public class UserCommentController {
     @GetMapping("/comment/get-up-like")
     public ResponseResult getUpLike(@RequestParam("uid") Integer uid) {
         ResponseResult responseResult = new ResponseResult();
-        Map<String, Object> map = userCommentService.getUserLikeAndDislike(uid);
+        Map<String, Object> map = userCommentService.getUserUpVoteAndDownVote(uid);
         responseResult.setData(map.get("userLike"));
         return responseResult;
     }
