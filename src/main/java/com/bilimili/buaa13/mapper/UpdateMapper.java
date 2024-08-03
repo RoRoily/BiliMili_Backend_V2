@@ -10,10 +10,6 @@ import java.util.List;
 
 @Mapper
 public interface UpdateMapper extends BaseMapper<Update> {
-//    @Select("SELECT * FROM comment WHERE root_id = #{rootId} AND vid = #{vid}")
-//    List<Comment> getChildCommentsByRootId(@Param("rootId") Integer rootId, @Param("vid") Integer vid);
-
-    @Select("SELECT * FROM update WHERE vid = #{vid} AND root_id = 0")
+    @Select("SELECT * FROM `update` WHERE vid = #{vid} AND root_id = 0")
     List<Update> getRootUpdatesByUid(@Param("uid") Integer uid);
-
 }

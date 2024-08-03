@@ -129,7 +129,7 @@ public class NoticeHandler {
                 System.out.println("运行到遍历自己的所有频道");
                 // 发给自己的全部channel
                 Set<Channel> from = IMServer.userChannel.get(user_id);
-                System.out.println("from is " + from + "User id" + chatDetailed.getUserId());
+                System.out.println("from is " + from + "User cid" + chatDetailed.getUserId());
                 if (from != null) {
                     for (Channel channel : from) {
                         channel.writeAndFlush(IMResponse.message("whisper", map));
@@ -138,7 +138,7 @@ public class NoticeHandler {
                 // 发给对方的全部channel
                 System.out.println("运行到遍历对方的所有频道");
                 Set<Channel> to = IMServer.userChannel.get(chatDetailed.getAnotherId());
-                System.out.println("to is " + to + "Another id" + chatDetailed.getAnotherId());
+                System.out.println("to is " + to + "Another cid" + chatDetailed.getAnotherId());
                 if (to != null) {
                     System.out.println("to is " + to);
                     for (Channel channel : to) {

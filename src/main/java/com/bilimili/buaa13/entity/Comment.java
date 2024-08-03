@@ -13,15 +13,15 @@ import java.util.Date;
 @NoArgsConstructor
 public class Comment {
     @TableId(type = IdType.AUTO)
-    private Integer id;
+    private Integer cid;
     private Integer vid;
-    private Integer uid;
     private Integer rootId;
-    private Integer parentId;
+    private Integer parentId;//父节点id，给这个id的评论发送
+    private Integer uid;
     private Integer toUserId;
     private String content;
-    private Integer love;
-    private Integer bad;
+    private Integer upVote;
+    private Integer downVote;
     private Date createTime;
     private Integer isTop;
     private Integer isDeleted;

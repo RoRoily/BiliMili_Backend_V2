@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -27,11 +28,10 @@ public class UserCommentController {
     @GetMapping("/comment/get-like-and-dislike")
     public ResponseResult getLikeAndDislike() {
         Integer uid = currentUser.getUserId();
-
+        Map<String, Object> map = userCommentService.getUserUpVoteAndDownVote(uid);
         ResponseResult response = new ResponseResult();
         response.setCode(200);
-        response.setData(userCommentService.getUserUpVoteAndDownVote(uid));
-
+        response.setData(map);
         return response;
     }
 
@@ -51,7 +51,7 @@ public class UserCommentController {
     }
 
     /**
-     * 获取UP主觉得很淦的评论
+     * 获取UP主觉得很赞的评论
      * @param uid   UP主uid
      * @return  点赞的评论id列表
      */
@@ -59,7 +59,20 @@ public class UserCommentController {
     public ResponseResult getUpLike(@RequestParam("uid") Integer uid) {
         ResponseResult responseResult = new ResponseResult();
         Map<String, Object> map = userCommentService.getUserUpVoteAndDownVote(uid);
-        responseResult.setData(map.get("userLike"));
+        responseResult.setData(map.get("userUpVote"));
+        return responseResult;
+    }
+
+    /**
+     * 获取up点踩的评论
+     * @param uid   UP主uid
+     * @return  点踩的评论id列表
+     */
+    @GetMapping("/comment/get-up-down_vote")
+    public ResponseResult getUpDownVote(@RequestParam("uid") Integer uid) {
+        ResponseResult responseResult = new ResponseResult();
+        Map<String, Object> map = userCommentService.getUserUpVoteAndDownVote(uid);
+        responseResult.setData(map.get("userDownVote"));
         return responseResult;
     }
 }

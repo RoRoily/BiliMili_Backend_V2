@@ -271,7 +271,7 @@ public class VideoServiceImpl implements VideoService {
                     /*CompletableFuture.runAsync(() -> {
                         Set<Object> set = redisUtil.zReverange("comment_video:" + vid, 0, -1);
                         List<String> list = new ArrayList<>();
-                        set.forEach(id -> list.add("comment_reply:" + id));
+                        set.forEach(cid -> list.add("comment_reply:" + cid));
                         list.add("comment_video:" + vid);
                         redisUtil.delValues(list);
                     }, taskExecutor);*/

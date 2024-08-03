@@ -51,9 +51,9 @@ public class EventListenerService {
 //    public void updateLoginMember() {
 //        Set<Object> lm = redisUtil.getMembers("login_member");
 ////        System.out.println(lm);
-//        for (Object id: lm) {
-//            if (!redisUtil.isExist("security:user:" + id)) {
-//                redisUtil.delMember("login_member", id);
+//        for (Object cid: lm) {
+//            if (!redisUtil.isExist("security:user:" + cid)) {
+//                redisUtil.delMember("login_member", cid);
 //            }
 //        }
 //    }

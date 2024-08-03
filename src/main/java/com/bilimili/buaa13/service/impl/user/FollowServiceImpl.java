@@ -103,10 +103,10 @@ public class FollowServiceImpl implements FollowService {
         queryWrapper.eq("uid_follow", uid);
         List<Follow> followList = followMapper.selectList(queryWrapper);
 
-        // 创建一个 integer 的 list，用于存储查询结果中的 id 值
+        // 创建一个 integer 的 list，用于存储查询结果中的 cid 值
         List<Integer> idList = new ArrayList<>();
 
-        // 遍历查询结果集，将 id 值添加到 list 中
+        // 遍历查询结果集，将 cid 值添加到 list 中
         for (Follow follow : followList) {
             idList.add(follow.getUidFans());
         }

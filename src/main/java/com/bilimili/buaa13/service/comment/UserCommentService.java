@@ -14,10 +14,10 @@ public interface UserCommentService {
     /**
      * 点赞或点踩某条评论
      * @param uid   当前用户id
-     * @param id    评论id
+     * @param cid    评论id
      * @param isLike true 赞 false 踩
      * @param isCancel true 取消  false 点中
      */
-    void setUserUpVoteOrDownVote(Integer uid, Integer id, boolean isLike, boolean isCancel);
+    void setUserUpVoteOrDownVote(Integer uid, Integer cid, boolean isLike, boolean isCancel);
 
 }

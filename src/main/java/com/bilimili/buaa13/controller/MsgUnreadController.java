@@ -31,7 +31,7 @@ public class MsgUnreadController {
 
     /**
      * 清除某一列的未读消息提示
-     * @param column    msg_unread表列名 "reply"/"at"/"love"/"system"/"whisper"/"dynamic"
+     * @param column    msg_unread表列名 "reply"/"at"/"up_vote"/"system"/"whisper"/"dynamic"
      */
     @PostMapping("/msg-unread/clear")
     public void clearUnread(@RequestParam("column") String column) {

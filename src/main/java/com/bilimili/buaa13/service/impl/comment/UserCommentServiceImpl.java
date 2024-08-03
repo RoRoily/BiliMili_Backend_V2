@@ -64,14 +64,14 @@ public class UserCommentServiceImpl implements UserCommentService {
     /**
      * 点赞或点踩某条评论
      * @param uid   当前用户id
-     * @param id    评论id
+     * @param cid    评论id
      * @param isLike true 赞 false 踩
      * @param isCancel true 取消 false 点中
      */
     @Override
-    public void setUserUpVoteOrDownVote(Integer uid, Integer id, boolean isLike, boolean isCancel) {
-        Boolean likeExist = redisUtil.isMember("upVote:" + uid, id);
-        Boolean dislikeExist = redisUtil.isMember("downVote:" + uid, id);
+    public void setUserUpVoteOrDownVote(Integer uid, Integer cid, boolean isLike, boolean isCancel) {
+        Boolean likeExist = redisUtil.isMember("upVote:" + uid, cid);
+        Boolean dislikeExist = redisUtil.isMember("downVote:" + uid, cid);
         //理论上，likeExist和disLikeExist不能同时存在,所以相加不等于2
         if(boolChangeBinary(likeExist) + boolChangeBinary(dislikeExist) == 1 ){
             //以likeExist为基准，要么like要么dislike
@@ -83,9 +83,9 @@ public class UserCommentServiceImpl implements UserCommentService {
             else if(judgeNumber == 7){
                 //已经点赞，现在需要取消
                 // 移除点赞记录
-                redisUtil.delMember("upVote:" + uid, id);
+                redisUtil.delMember("upVote:" + uid, cid);
                 // 更新评论点赞数
-                commentService.updateComment(id, "love", false, 1);
+                commentService.updateComment(cid, "up_vote", false, 1);
             }
             else if(judgeNumber == 5){
                 //以前点了赞，现在需要取消踩。不需要取消
@@ -94,11 +94,11 @@ public class UserCommentServiceImpl implements UserCommentService {
             else if(judgeNumber == 4){
                 //以前点了赞，现在需要点踩
                 // 更新用户点踩记录
-                redisUtil.addMember("downVote:" + uid, id);
+                redisUtil.addMember("downVote:" + uid, cid);
                 // 原本点了赞，要取消赞
-                redisUtil.delMember("upVote:" + uid, id);
+                redisUtil.delMember("upVote:" + uid, cid);
                 // 更新评论点赞点踩的记录
-                commentService.updateLikeAndDisLike(id, false);
+                commentService.updateLikeAndDisLike(cid, false);
             }
             else if(judgeNumber == 3){
                 //原本点了踩，现在需要取消点赞，直接返回
@@ -107,19 +107,19 @@ public class UserCommentServiceImpl implements UserCommentService {
             else if(judgeNumber == 2){
                 //原本点了踩，现在需要点赞
                 // 添加点赞记录
-                redisUtil.addMember("upVote:" + uid, id);
+                redisUtil.addMember("upVote:" + uid, cid);
                 // 原本点了踩，就要取消踩
                 // 1.redis中删除点踩记录
-                redisUtil.delMember("downVote:" + uid, id);
+                redisUtil.delMember("downVote:" + uid, cid);
                 // 2. 数据库中更改评论的点赞点踩数
-                commentService.updateLikeAndDisLike(id, true);
+                commentService.updateLikeAndDisLike(cid, true);
             }
             else if(judgeNumber == 1){
                 //原本点了踩，现在需要取消踩
                 // 取消用户点踩记录
-                redisUtil.delMember("downVote:" + uid, id);
+                redisUtil.delMember("downVote:" + uid, cid);
                 // 更新评论点踩数量
-                commentService.updateComment(id, "bad", false, 1);
+                commentService.updateComment(cid, "down_vote", false, 1);
             }
             else if (judgeNumber == 0){
                 //原本点了踩，现在还要点踩，直接返回
@@ -139,8 +139,8 @@ public class UserCommentServiceImpl implements UserCommentService {
                     //选中点踩
                     // 原本没有点赞，直接点踩，更新评论点踩数量
                     // 添加点踩记录
-                    redisUtil.addMember("downVote:" + uid, id);
-                    commentService.updateComment(id, "bad", true, 1);
+                    redisUtil.addMember("downVote:" + uid, cid);
+                    commentService.updateComment(cid, "down_vote", true, 1);
                     break;
                 case 1:
                     //取消点踩,以前没有点踩，直接过
@@ -148,9 +148,9 @@ public class UserCommentServiceImpl implements UserCommentService {
                 case 2:
                     //点赞,但是原本没有点赞
                     // 添加点赞记录
-                    redisUtil.addMember("upVote:" + uid, id);
+                    redisUtil.addMember("upVote:" + uid, cid);
                     // 原来没点踩，只需要点赞, 这里只更新评论的点赞数
-                    commentService.updateComment(id, "love", true, 1);
+                    commentService.updateComment(cid, "up_vote", true, 1);
                     break;
                 case 3:
                     //取消点赞，以前没有点赞，直接过

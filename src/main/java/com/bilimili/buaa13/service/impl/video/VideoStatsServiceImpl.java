@@ -61,7 +61,7 @@ public class VideoStatsServiceImpl implements VideoStatsService {
     /**
      * 同时更新点赞和点踩
      * @param vid   视频ID
-     * @param addGood   是否点赞，true则good+1&bad-1，false则good-1&bad+1
+     * @param addGood   是否点赞，true则good+1&down_vote-1，false则good-1&down_vote+1
      */
     @Override
     public void updateGoodAndBad(Integer vid, boolean addGood) {
@@ -69,10 +69,10 @@ public class VideoStatsServiceImpl implements VideoStatsService {
         if (addGood) {
             updateWrapper.eq("vid", vid);
             updateWrapper.setSql("good = good + 1");
-            updateWrapper.setSql("bad = CASE WHEN bad - 1 < 0 THEN 0 ELSE bad - 1 END");
+            updateWrapper.setSql("down_vote = CASE WHEN down_vote - 1 < 0 THEN 0 ELSE down_vote - 1 END");
         } else {
             updateWrapper.eq("vid", vid);
-            updateWrapper.setSql("bad = bad + 1");
+            updateWrapper.setSql("down_vote = down_vote + 1");
             updateWrapper.setSql("good = CASE WHEN good - 1 < 0 THEN 0 ELSE good - 1 END");
         }
         videoStatsMapper.update(null, updateWrapper);

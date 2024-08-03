@@ -6,9 +6,14 @@ import com.bilimili.buaa13.service.comment.CommentService;
 import com.bilimili.buaa13.service.utils.CurrentUser;
 import com.bilimili.buaa13.utils.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 public class CommentController {
@@ -23,13 +28,13 @@ public class CommentController {
      * 获取评论树列表，每次查十条
      * @param vid   对应视频ID
      * @param offset 分页偏移量（已经获取到的评论树的数量）
-     * @param type  排序类型 1 按热度排序 2 按时间排序
+     * @param sortType  排序类型 1 按热度排序 2 按时间排序
      * @return  评论树列表
      */
     @GetMapping("/comment/get")
     public ResponseResult getCommentTreeByVid(@RequestParam("vid") Integer vid,
                                               @RequestParam("offset") Long offset,
-                                              @RequestParam("type") Integer type) {
+                                              @RequestParam("sortType") Integer sortType) {
         ResponseResult responseResult = new ResponseResult();
         long count = redisUtil.zCard("comment_video:" + vid);
         Map<String, Object> map = new HashMap<>();
@@ -40,11 +45,11 @@ public class CommentController {
         } else if (offset + 10 >= count){
             // 表示这次查询会查完全部根评论
             map.put("more", false);
-            map.put("comments", commentService.getCommentTreeByVid(vid, offset, type));
+            map.put("comments", commentService.getCommentTreeByVid(vid, offset, sortType));
         } else {
             // 表示这次查的只是冰山一角，还有很多评论没查到
             map.put("more", true);
-            map.put("comments", commentService.getCommentTreeByVid(vid, offset, type));
+            map.put("comments", commentService.getCommentTreeByVid(vid, offset, sortType));
         }
         responseResult.setData(map);
         return responseResult;

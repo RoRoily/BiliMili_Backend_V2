@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class IMResponse {
-    private String type;    // 消息类型 如："reply","at","love","system","whisper","dynamic" / "error"
+    private String type;    // 消息类型 如："reply","at","up_vote","system","whisper","dynamic" / "error"
     private LocalDateTime time;
     private Object data;    // 返回的相关数据
 
@@ -27,7 +27,7 @@ public class IMResponse {
 
     /**
      * 非系统类消息
-     * @param type  消息类型 如："reply","at","love","system","whisper","dynamic" 对应 msg_unread 表的每一列
+     * @param type  消息类型 如："reply","at","up_vote","system","whisper","dynamic" 对应 msg_unread 表的每一列
      * @param data  返回的相关数据
      * @return  返回非系统消息以及携带数据
      */

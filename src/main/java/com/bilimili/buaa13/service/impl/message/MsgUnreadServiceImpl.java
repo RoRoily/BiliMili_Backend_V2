@@ -41,7 +41,7 @@ public class MsgUnreadServiceImpl implements MsgUnreadService {
     /**
      * 给指定用户的某一列未读消息加一
      * @param uid   用户ID
-     * @param column    msg_unread表列名 "reply"/"at"/"love"/"system"/"whisper"/"dynamic"
+     * @param column    msg_unread表列名 "reply"/"at"/"up_vote"/"system"/"whisper"/"dynamic"
      */
     @Override
     public void addOneUnread(Integer uid, String column) {
@@ -54,7 +54,7 @@ public class MsgUnreadServiceImpl implements MsgUnreadService {
     /**
      * 清除指定用户的某一列未读消息
      * @param uid   用户ID
-     * @param column    msg_unread表列名 "reply"/"at"/"love"/"system"/"whisper"/"dynamic"
+     * @param column    msg_unread表列名 "reply"/"at"/"up_vote"/"system"/"whisper"/"dynamic"
      */
     @Override
     public void clearUnread(Integer uid, String column) {

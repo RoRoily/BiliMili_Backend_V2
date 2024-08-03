@@ -98,7 +98,7 @@ public class UserVideoServiceImpl implements UserVideoService {
             userVideo.setLove(1);
             UpdateWrapper<UserVideo> updateWrapper = new UpdateWrapper<>();
             updateWrapper.eq("uid", uid).eq("vid", vid);
-            updateWrapper.setSql("love = 1");
+            updateWrapper.setSql("up_vote = 1");
             updateWrapper.set("love_time", new Date());
             if (userVideo.getUnlove() == 1) {
                 // 原本点了踩，要取消踩
@@ -122,14 +122,14 @@ public class UserVideoServiceImpl implements UserVideoService {
                 if(!Objects.equals(video.getUid(), uid)) {
                     // 更新最新被点赞的视频
                     redisUtil.zset("be_loved_zset:" + video.getUid(), vid);
-                    msgUnreadService.addOneUnread(video.getUid(), "love");
+                    msgUnreadService.addOneUnread(video.getUid(), "up_vote");
                     // netty 通知未读消息
                     Map<String, Object> map = new HashMap<>();
                     map.put("type", "接收");
                     Set<Channel> channels = IMServer.userChannel.get(video.getUid());
                     if (channels != null) {
                         for (Channel channel: channels) {
-                            channel.writeAndFlush(IMResponse.message("love", map));
+                            channel.writeAndFlush(IMResponse.message("up_vote", map));
                         }
                     }
                 }
@@ -144,7 +144,7 @@ public class UserVideoServiceImpl implements UserVideoService {
             userVideo.setLove(0);
             UpdateWrapper<UserVideo> updateWrapper = new UpdateWrapper<>();
             updateWrapper.eq("uid", uid).eq("vid", vid);
-            updateWrapper.setSql("love = 0");
+            updateWrapper.setSql("up_vote = 0");
             userVideoMapper.update(null, updateWrapper);
             redisUtil.zsetDelMember(key, vid);  // 移除点赞记录
             CompletableFuture.runAsync(() -> {
@@ -164,7 +164,7 @@ public class UserVideoServiceImpl implements UserVideoService {
             if (userVideo.getLove() == 1) {
                 // 原本点了赞，要取消赞
                 userVideo.setLove(0);
-                updateWrapper.setSql("love = 0");
+                updateWrapper.setSql("up_vote = 0");
                 redisUtil.zsetDelMember(key, vid);  // 移除点赞记录
                 CompletableFuture.runAsync(() -> {
                     videoStatsService.updateGoodAndBad(vid, false);
@@ -172,7 +172,7 @@ public class UserVideoServiceImpl implements UserVideoService {
             } else {
                 // 原本没点赞，只需要点踩就行
                 CompletableFuture.runAsync(() -> {
-                    videoStatsService.updateVideoStats(vid, "bad", true, 1);
+                    videoStatsService.updateVideoStats(vid, "down_vote", true, 1);
                 }, taskExecutor);
             }
             userVideoMapper.update(null, updateWrapper);
@@ -189,7 +189,7 @@ public class UserVideoServiceImpl implements UserVideoService {
             updateWrapper.setSql("unlove = 0");
             userVideoMapper.update(null, updateWrapper);
             CompletableFuture.runAsync(() -> {
-                videoStatsService.updateVideoStats(vid, "bad", false, 1);
+                videoStatsService.updateVideoStats(vid, "down_vote", false, 1);
             }, taskExecutor);
         }
         return userVideo;
