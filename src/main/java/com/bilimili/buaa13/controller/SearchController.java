@@ -62,10 +62,10 @@ public class SearchController {
     public ResponseResult getSearchWord(@RequestParam("keyword") String keyword) throws UnsupportedEncodingException {
         keyword = URLDecoder.decode(keyword, "UTF-8");  // 解码经过url传输的字符串
         ResponseResult responseResult = new ResponseResult();
-        if (keyword.trim().length() == 0) {
+        if (keyword.trim().isEmpty()) {
             responseResult.setData(Collections.emptyList());
         } else {
-            responseResult.setData(searchService.getMatchingWord(keyword));
+            responseResult.setData(searchService.getKeyWord(keyword));
         }
         return responseResult;
     }

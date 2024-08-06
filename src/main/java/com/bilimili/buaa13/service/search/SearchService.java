@@ -18,7 +18,7 @@ public interface SearchService {
      * @param keyword   关键词
      * @return  相关搜索推荐词条 10条
      */
-    List<String> getMatchingWord(String keyword);
+    List<String> getKeyWord(String keyword);
 
     /**
      * 获取热搜词条

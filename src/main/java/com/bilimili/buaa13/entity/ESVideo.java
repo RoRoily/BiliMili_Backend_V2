@@ -11,8 +11,8 @@ public class ESVideo {
     private Integer vid;
     private Integer uid;
     private String title;
-    private String mc_id;
-    private String sc_id;
+    private String mainClassId;
+    private String subClassId;
     private String tags;
     private Integer status;
 }

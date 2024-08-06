@@ -96,7 +96,7 @@ public class RedisUtil {
      * @return
      */
     public boolean isExist(String redisKey) {
-        return redisTemplate.hasKey(redisKey);
+        return Boolean.TRUE.equals(redisTemplate.hasKey(redisKey));
     }
 
     // 通用 相关操作 end -------------------------------------------------------------------------------------------------

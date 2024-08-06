@@ -123,6 +123,23 @@ CREATE TABLE `video_stats` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `hot_search`
+--
+
+DROP TABLE IF EXISTS `hot_search`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `hot_search` (
+                        `hid` int(11) NOT NULL AUTO_INCREMENT COMMENT '热度词id',
+                        `content` varchar(50) NOT NULL COMMENT '热度词内容',
+                        `hot` int(11) NOT NULL COMMENT '热度',
+                        `type` int(4) NOT NULL DEFAULT '0' COMMENT '热度词类型',
+                        PRIMARY KEY (`hid`),
+                        UNIQUE KEY `id` (`hid`)
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COMMENT='热度词表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `category`
 --
 

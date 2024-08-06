@@ -26,7 +26,7 @@ public class ESUtil {
 
     /**
      * 添加视频文档
-     * @param video
+     * @param video 视频类
      */
     public void addVideo(Video video) throws IOException {
         try {
@@ -232,11 +232,13 @@ public class ESUtil {
             SearchRequest searchRequest = new SearchRequest.Builder().index("search_word").query(bool).from(0).size(10).build();
             SearchResponse<ESSearchWord> searchResponse = client.search(searchRequest, ESSearchWord.class);
             for (Hit<ESSearchWord> hit : searchResponse.hits().hits()) {
-                list.add(hit.source().getContent());
+                if (hit.source() != null) {
+                    list.add(hit.source().getContent());
+                }
             }
             return list;
         } catch (IOException e) {
-            log.error("获取ES搜索提示词时出错了：" + e);
+            log.error("获取ES搜索提示词时出错了：{}", e.getMessage());
             return Collections.emptyList();
         }
     }
