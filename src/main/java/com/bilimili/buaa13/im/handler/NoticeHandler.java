@@ -2,14 +2,11 @@ package com.bilimili.buaa13.im.handler;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.bilimili.buaa13.entity.*;
 import com.bilimili.buaa13.im.IMServer;
 import com.bilimili.buaa13.mapper.ArticleMapper;
 import com.bilimili.buaa13.mapper.ChatDetailedMapper;
 import com.bilimili.buaa13.mapper.ChatMapper;
-import com.bilimili.buaa13.entity.Article;
-import com.bilimili.buaa13.entity.Chat;
-import com.bilimili.buaa13.entity.ChatDetailed;
-import com.bilimili.buaa13.entity.IMResponse;
 import com.bilimili.buaa13.entity.dto.UserDTO;
 import com.bilimili.buaa13.service.message.ChatService;
 import com.bilimili.buaa13.service.user.FollowService;
@@ -239,7 +236,11 @@ public class NoticeHandler {
     public static void sendNotification(Integer upId, Integer articleId) {
         try {
             // 获取关注者列表
+            User tempUser = new User();
+            UserDTO tempUserDTO = new UserDTO();
             List<Integer> fans = followService.getUidFans(upId, true);
+
+
 
             // 处理每个关注者
             fans.forEach(fanId -> {
@@ -274,6 +275,8 @@ public class NoticeHandler {
     }
 
     private static ChatDetailed buildChatDetailed(Integer upId, Integer fanId, Integer articleId) {
+
+        Boolean flag = true;
         Article article = articleMapper.selectOne(new QueryWrapper<Article>().eq("aid", articleId));
         UserDTO userDTO = userService.getUserByUId(article.getUid());
         String link = "http://116.62.87.161:8787/article/" + articleId;
@@ -329,6 +332,16 @@ public class NoticeHandler {
     private static void sendToAllChannels(Integer upId, Integer fanId, Map<String, Object> responseMap) {
         sendToChannels(IMServer.userChannel.get(upId), responseMap);
         sendToChannels(IMServer.userChannel.get(fanId), responseMap);
+
+            // 并发执行每个视频数据统计的查询任务
+            //并行流方式遍历列表
+            //注释并行
+            /*List<VideoStats> list = set.stream().parallel()
+                .map(vid -> videoStatsService.getStatsByVideoId((Integer) vid))
+                .collect(Collectors.toList());*/
+            List<Object> listSet = new ArrayList<>();
+            List<VideoStats> list = new ArrayList<>();
+
     }
 
     private static void sendToChannels(Set<Channel> channels, Map<String, Object> message) {
