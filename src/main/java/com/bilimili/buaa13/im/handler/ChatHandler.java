@@ -167,4 +167,125 @@ public class ChatHandler {
             ctx.channel().writeAndFlush(IMResponse.error("撤回消息时出错了 Σ(ﾟдﾟ;)"));
         }
     }
+
+
+    //修改于2024.08.08
+
+
+    public static void withdrawMessage(ChannelHandlerContext ctx, TextWebSocketFrame tx) {
+        try {
+            JSONObject jsonObject = JSONObject.parseObject(tx.text());
+            Integer messageId = jsonObject.getInteger("id");
+            Integer userId = Optional.ofNullable((Integer) ctx.channel().attr(AttributeKey.valueOf("userId")).get())
+                    .orElseThrow(() -> new IllegalStateException("User ID not found in channel context"));
+
+            ChatDetailed chatDetailed = Optional.ofNullable(chatDetailedMapper.selectById(messageId))
+                    .orElseThrow(() -> new IllegalStateException("Message not found"));
+
+            validateUserCanWithdraw(chatDetailed, userId);
+            validateWithdrawalTime(chatDetailed);
+
+            updateMessageAsWithdrawn(messageId);
+
+            Map<String, Object> responseMap = createWithdrawResponseMap(chatDetailed, messageId);
+            broadcastWithdrawal(ctx, userId, chatDetailed.getAnotherId(), responseMap);
+
+        } catch (Exception e) {
+            log.error("Error while withdrawing message: ", e);
+            ctx.channel().writeAndFlush(IMResponse.error("撤回消息时出错了 Σ(ﾟдﾟ;)"));
+        }
+    }
+
+    private static void validateUserCanWithdraw(ChatDetailed chatDetailed, Integer userId) {
+        if (!Objects.equals(chatDetailed.getUserId(), userId)) {
+            throw new SecurityException("无权撤回此消息");
+        }
+    }
+
+    private static void validateWithdrawalTime(ChatDetailed chatDetailed) {
+        long timeSinceSent = System.currentTimeMillis() - chatDetailed.getTime().getTime();
+        if (timeSinceSent > 120000) {
+            throw new IllegalStateException("发送时间超过两分钟不能撤回");
+        }
+    }
+
+    private static void updateMessageAsWithdrawn(Integer messageId) {
+        UpdateWrapper<ChatDetailed> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.eq("id", messageId).set("withdraw", 1);
+        chatDetailedMapper.update(null, updateWrapper);
+    }
+
+    private static Map<String, Object> createWithdrawResponseMap(ChatDetailed chatDetailed, Integer messageId) {
+        Map<String, Object> responseMap = new HashMap<>();
+        responseMap.put("type", "撤回");
+        responseMap.put("sendId", chatDetailed.getUserId());
+        responseMap.put("acceptId", chatDetailed.getAnotherId());
+        responseMap.put("id", messageId);
+        return responseMap;
+    }
+
+    private static void broadcastWithdrawal(ChannelHandlerContext ctx, Integer userId, Integer anotherId, Map<String, Object> responseMap) {
+        Stream.of(IMServer.userChannel.get(userId), IMServer.userChannel.get(anotherId))
+                .filter(Objects::nonNull)
+                .flatMap(Set::stream)
+                .forEach(channel -> channel.writeAndFlush(IMResponse.message("whisper", responseMap)));
+    }
+
+
+
+
+    public static void undoWithdrawal(ChannelHandlerContext ctx, TextWebSocketFrame tx) {
+        try {
+            JSONObject jsonObject = JSONObject.parseObject(tx.text());
+            Integer messageId = jsonObject.getInteger("id");
+            Integer userId = Optional.ofNullable((Integer) ctx.channel().attr(AttributeKey.valueOf("userId")).get())
+                    .orElseThrow(() -> new IllegalStateException("User ID not found in channel context"));
+
+            ChatDetailed chatDetailed = Optional.ofNullable(chatDetailedMapper.selectById(messageId))
+                    .orElseThrow(() -> new IllegalStateException("Message not found"));
+
+            validateUserCanUndo(chatDetailed, userId);
+
+            restoreMessage(chatDetailed.getId());
+
+            Map<String, Object> responseMap = createUndoResponseMap(chatDetailed, messageId);
+            broadcastUndo(ctx, userId, chatDetailed.getAnotherId(), responseMap);
+
+        } catch (Exception e) {
+            log.error("Error while undoing withdrawal: ", e);
+            ctx.channel().writeAndFlush(IMResponse.error("取消撤回时出错了 Σ(ﾟдﾟ;)"));
+        }
+    }
+
+    private static void validateUserCanUndo(ChatDetailed chatDetailed, Integer userId) {
+        if (!Objects.equals(chatDetailed.getUserId(), userId)) {
+            throw new SecurityException("无权取消撤回此消息");
+        }
+        if (chatDetailed.getWithdraw() == 0) {
+            throw new IllegalStateException("消息未撤回，无法取消撤回");
+        }
+    }
+
+    private static void restoreMessage(Integer messageId) {
+        UpdateWrapper<ChatDetailed> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.eq("id", messageId).set("withdraw", 0);
+        chatDetailedMapper.update(null, updateWrapper);
+    }
+
+    private static Map<String, Object> createUndoResponseMap(ChatDetailed chatDetailed, Integer messageId) {
+        Map<String, Object> responseMap = new HashMap<>();
+        responseMap.put("type", "取消撤回");
+        responseMap.put("sendId", chatDetailed.getPostId());
+        responseMap.put("acceptId", chatDetailed.getAcceptId());
+        responseMap.put("id", messageId);
+        return responseMap;
+    }
+
+    private static void broadcastUndo(ChannelHandlerContext ctx, Integer userId, Integer anotherId, Map<String, Object> responseMap) {
+        Stream.of(IMServer.userChannel.get(userId), IMServer.userChannel.get(anotherId))
+                .filter(Objects::nonNull)
+                .flatMap(Set::stream)
+                .forEach(channel -> channel.writeAndFlush(IMResponse.message("whisper", responseMap)));
+    }
+
 }
