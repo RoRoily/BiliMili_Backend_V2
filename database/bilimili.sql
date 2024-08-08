@@ -198,13 +198,13 @@ DROP TABLE IF EXISTS `chat`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `chat` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一主键',
-  `user_id` int(11) NOT NULL COMMENT '对象UID',
-  `another_id` int(11) NOT NULL COMMENT '用户UID',
+  `post_id` int(11) NOT NULL COMMENT '对象UID',
+  `accept_id` int(11) NOT NULL COMMENT '用户UID',
   `is_deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否移除聊天 0否 1是',
-  `unread` int(11) NOT NULL DEFAULT '0' COMMENT '消息未读数量',
+  `unread_num` int(11) NOT NULL DEFAULT '0' COMMENT '消息未读数量',
   `latest_time` datetime NOT NULL COMMENT '最近接收消息的时间或最近打开聊天窗口的时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `from_to` (`user_id`,`another_id`),
+  UNIQUE KEY `from_to` (post_id,accept_id),
   UNIQUE KEY `id` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COMMENT='聊天表';
 /*!40101 SET character_set_client = @saved_cs_client */;

@@ -81,7 +81,7 @@ public class MsgUnreadServiceImpl implements MsgUnreadService {
         if (Objects.equals(column, "whisper")) {
             // 如果是清除私聊消息还需要去把chat表的全部未读清掉
             UpdateWrapper<Chat> updateWrapper1 = new UpdateWrapper<>();
-            updateWrapper1.eq("accept_id", uid).set("unread", 0);
+            updateWrapper1.eq("accept_id", uid).set("unread_num", 0);
             chatMapper.update(null, updateWrapper1);
         }
     }

@@ -47,6 +47,12 @@ public class ChatDetailedServiceImpl implements ChatDetailedService {
         }
         QueryWrapper<ChatDetailed> queryWrapper = new QueryWrapper<>();
         queryWrapper.in("id", set);*/
+        if(offset >= Integer.MAX_VALUE){
+            //不要超过int最大值
+            map.put("messageList", Collections.emptyList());
+            map.put("moreMessage", true);
+            return map;
+        }
         List<ChatDetailed> chatDetailedList = chatDetailedMapper.selectAllChatDetailed(post_id,accept_id);
         if(chatDetailedList == null || chatDetailedList.isEmpty()){
             map.put("messageList", Collections.emptyList());
@@ -55,7 +61,7 @@ public class ChatDetailedServiceImpl implements ChatDetailedService {
         }
         if(offset+10 < chatDetailedList.size()){
             map.put("moreMessage", true);
-            List<ChatDetailed> littleList = IntStream.range(0,10).mapToObj(chatDetailedList::get).collect(Collectors.toList());
+            List<ChatDetailed> littleList = IntStream.range(offset.intValue(),10+offset.intValue()).mapToObj(chatDetailedList::get).collect(Collectors.toList());
             map.put("messageList", littleList);
         }
         else {

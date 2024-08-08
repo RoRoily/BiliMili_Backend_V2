@@ -12,7 +12,7 @@ public interface ChatService {
      * @param acceptId    收消息者UID (我打开对方的聊天框即我是收消息者)
      * @return "已存在"/"新创建"
      */
-    Map<String, Object> createChat(Integer postId, Integer acceptId);
+    Map<String, Object> createOneChat(Integer postId, Integer acceptId);
 
     /**
      * 获取聊天列表 包含用户信息和最近一条聊天内容 每次查10个
@@ -47,15 +47,15 @@ public interface ChatService {
 
     /**
      * 更新窗口为在线状态，顺便清除未读
-     * @param from  发消息者UID（对方）
-     * @param to    收消息者UID（自己）
+     * @param postId  发消息者UID（对方）
+     * @param acceptId    收消息者UID（自己）
      */
-    void updateWhisperOnline(Integer from, Integer to);
+    void updateStateOnline(Integer postId, Integer acceptId);
 
     /**
      * 更新窗口为离开状态
-     * @param from  发消息者UID（对方）
-     * @param to    收消息者UID（自己）
+     * @param postId  发消息者UID（对方）
+     * @param acceptId    收消息者UID（自己）
      */
-    void updateWhisperOutline(Integer from, Integer to);
+    void updateStateOutline(Integer postId, Integer acceptId);
 }

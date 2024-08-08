@@ -34,7 +34,7 @@ public class ChatController {
     public ResponseResult createChat(@PathVariable("uid") Integer uid) {
        ResponseResult responseResult = new ResponseResult();
        //获取Chat,chat的细节
-       Map<String, Object> result = chatService.createChat(uid, currentUser.getUserId());
+       Map<String, Object> result = chatService.createOneChat(uid, currentUser.getUserId());
        if (Objects.equals(result.get("msg").toString(), "新创建")) {//第一次聊天或之前的聊天被删除
            responseResult.setData(result);  // 返回新创建的聊天
        } else if (Objects.equals(result.get("msg").toString(), "未知用户")) {
@@ -84,7 +84,7 @@ public class ChatController {
     @GetMapping("/msg/chat/online")
     public void updateWhisperOnline(@RequestParam("from") Integer from) {
         Integer uid = currentUser.getUserId();
-        chatService.updateWhisperOnline(from, uid);
+        chatService.updateStateOnline(from, uid);
     }
 
     /**
@@ -93,6 +93,6 @@ public class ChatController {
      */
     @GetMapping("/msg/chat/outline")
     public void updateWhisperOutline(@RequestParam("from") Integer from, @RequestParam("to") Integer to) {
-        chatService.updateWhisperOutline(from, to);
+        chatService.updateStateOutline(from, to);
     }
 }
