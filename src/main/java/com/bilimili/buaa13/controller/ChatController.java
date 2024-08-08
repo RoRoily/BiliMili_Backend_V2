@@ -54,7 +54,7 @@ public class ChatController {
         Integer uid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
         Map<String, Object> map = new HashMap<>();
-        map.put("list", chatService.getChatListWithData(uid, offset));
+        map.put("list", chatService.getChatDataList(uid, offset));
         // 检查是否还有更多
         if (offset + 10 < redisUtil.zCard("chat_zset:" + uid)) {
             map.put("more", true);
@@ -73,7 +73,7 @@ public class ChatController {
     @GetMapping("/msg/chat/delete/{uid}")
     public ResponseResult deleteChat(@PathVariable("uid") Integer uid) {
         ResponseResult responseResult = new ResponseResult();
-        chatService.delChat(uid, currentUser.getUserId());
+        chatService.deleteOneChat(uid, currentUser.getUserId());
         return responseResult;
     }
 

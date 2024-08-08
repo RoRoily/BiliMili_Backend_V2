@@ -56,7 +56,7 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
                 case NOTICE:
                     Integer user_id = (Integer) ctx.channel().attr(AttributeKey.valueOf("userId")).get();
                     System.out.println("NOTICE IS NOY WRONG");
-                    //List<Integer> fans = followService.getUidFans(user_id,true);
+                    //List<Integer> fans = followService.getUidFans(post_id,true);
                     //for(Integer fan:fans){
                     NoticeHandler.send(ctx,tx);
                     //}

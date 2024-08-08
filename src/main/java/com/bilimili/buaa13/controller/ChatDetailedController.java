@@ -28,7 +28,7 @@ public class ChatDetailedController {
                                              @RequestParam("offset") Long offset) {
         Integer loginUid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
-        responseResult.setData(chatDetailedService.getDetails(uid, loginUid, offset));
+        responseResult.setData(chatDetailedService.getMessage(uid, loginUid, offset));
         return responseResult;
     }
 
@@ -41,7 +41,7 @@ public class ChatDetailedController {
     public ResponseResult delDetail(@RequestParam("id") Integer id) {
         Integer loginUid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
-        if (!chatDetailedService.deleteDetail(id, loginUid)) {
+        if (!chatDetailedService.deleteChatDetail(id, loginUid)) {
             responseResult.setCode(500);
             responseResult.setMessage("删除消息失败");
         }

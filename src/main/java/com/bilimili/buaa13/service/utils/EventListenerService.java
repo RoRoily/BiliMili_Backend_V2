@@ -45,26 +45,12 @@ public class EventListenerService {
     public static List<RedisUtil.ZObjScore> hotSearchWords = new ArrayList<>();     // 上次更新的热搜词条
 
     /**
-     * 轮询用户登录状态，将登录过期但还在在线集合的用户移出集合 (现在改用websocket实时更新用户在线状态就弃用这个定时任务了)
-     */
-//    @Scheduled(fixedDelay = 1000 * 60 * 10) // 10分钟轮询一次，记得启动类加上 @EnableScheduling 注解以启动任务调度功能
-//    public void updateLoginMember() {
-//        Set<Object> lm = redisUtil.getMembers("login_member");
-////        System.out.println(lm);
-//        for (Object cid: lm) {
-//            if (!redisUtil.isExist("security:user:" + cid)) {
-//                redisUtil.delMember("login_member", cid);
-//            }
-//        }
-//    }
-
-    /**
      * 每一小时更新一次热搜词条热度
      */
     @Scheduled(fixedDelay = 1000 * 60 * 60)
     public void updateHotSearch() {
         List<RedisUtil.ZObjScore> list = redisUtil.zReverangeWithScores("search_word", 0, -1);
-        if (list == null || list.size() == 0) return;
+        if (list == null || list.isEmpty()) return;
         int count = list.size();
         double total = 0;
         // 计算总分数
@@ -150,37 +136,18 @@ public class EventListenerService {
             QueryWrapper<ChatDetailed> queryWrapper = new QueryWrapper<>();
             List<ChatDetailed> list = chatDetailedMapper.selectList(queryWrapper);
             // 按用户将对应的消息分类整理
-        /*
-        chatSet中的数据对象示意：
-        [
-            {"user_id": 1, "another_id": 2},
-            {"user_id": 2, "another_id": 1},
-            ...
-        ]
-        setMap中的数据对象示意：1打开了2的聊天窗口展示的消息记录
-        {
-            1(自己/another_id): {
-                2(聊天对象/user_id): [
-                    { member: chatDetailed.getId(), time: chatDetailed.getTime() },
-                    ...
-                ],
-                ...
-            },
-            ...
-        }
-         */
             Set<Map<String, Integer>> chatSet = new HashSet<>();
             Map<Integer, Map<Integer, Set<RedisUtil.ZObjTime>>> setMap = new HashMap<>();
             for (ChatDetailed chatDetailed : list) {
-                Integer from = chatDetailed.getUserId();    // 发送者ID
-                Integer to = chatDetailed.getAnotherId();   // 接收者ID
+                Integer from = chatDetailed.getPostId();    // 发送者ID
+                Integer to = chatDetailed.getAcceptId();   // 接收者ID
 
                 // 发送者视角 chat_detailed_zset:to:from
                 Map<String, Integer> fromMap = new HashMap<>();
                 fromMap.put("user_id", to);
                 fromMap.put("another_id", from);
                 chatSet.add(fromMap);
-                if (chatDetailed.getUserDel() == 0) {
+                if (chatDetailed.getPostDel() == 0) {
                     // 发送者没删就加到对应聊天的有序集合
                     if (setMap.get(from) == null) {
                         Map<Integer, Set<RedisUtil.ZObjTime>> map = new HashMap<>();
@@ -205,7 +172,7 @@ public class EventListenerService {
                 toMap.put("user_id", from);
                 toMap.put("another_id", to);
                 chatSet.add(toMap);
-                if (chatDetailed.getAnotherDel() == 0) {
+                if (chatDetailed.getAcceptDel() == 0) {
                     // 接收者没删就加到对应聊天的有序集合
                     if (setMap.get(to) == null) {
                         Map<Integer, Set<RedisUtil.ZObjTime>> map = new HashMap<>();
@@ -228,8 +195,8 @@ public class EventListenerService {
 
             // 更新redis
             for (Map<String, Integer> map : chatSet) {
-                Integer uid = map.get("user_id");
-                Integer aid = map.get("another_id");
+                Integer uid = map.get("post_id");
+                Integer aid = map.get("accept_id");
                 String key = "chat_detailed_zset:" + uid + ":" + aid;
                 redisUtil.delValue(key);
                 redisUtil.zsetOfCollectionByTime(key, setMap.get(uid).get(aid));
@@ -239,49 +206,4 @@ public class EventListenerService {
         }
 
     }
-
-    /*
-    // 这段是GPT根据上面整合生成的代码，没测试过，确实相较好看很多
-    public void updateChatDetailedZSet() {
-        QueryWrapper<ChatDetailed> queryWrapper = new QueryWrapper<>();
-        List<ChatDetailed> list = chatDetailedMapper.selectList(queryWrapper);
-
-        // 按用户将对应的消息分类整理
-        Set<Map<String, Integer>> chatSet = new HashSet<>();
-        Map<Integer, Map<Integer, Set<RedisUtil.ZSetObject>>> setMap = new HashMap<>();
-
-        for (ChatDetailed chatDetailed : list) {
-            updateChatSetAndMap(chatDetailed, chatSet, setMap, true);
-            updateChatSetAndMap(chatDetailed, chatSet, setMap, false);
-        }
-
-        // 更新redis
-        for (Map<String, Integer> map : chatSet) {
-            Integer uid = map.get("user_id");
-            Integer aid = map.get("another_id");
-            String key = "chat_detailed_zset:" + uid + ":" + aid;
-            redisUtil.delValue(key);
-            redisUtil.zsetOfCollection(key, setMap.get(uid).get(aid));
-        }
-    }
-
-    private void updateChatSetAndMap(ChatDetailed chatDetailed, Set<Map<String, Integer>> chatSet,
-                                     Map<Integer, Map<Integer, Set<RedisUtil.ZSetObject>>> setMap, boolean isFrom) {
-        Integer from = isFrom ? chatDetailed.getUserId() : chatDetailed.getAnotherId();
-        Integer to = isFrom ? chatDetailed.getAnotherId() : chatDetailed.getUserId();
-        Integer delFlag = isFrom ? chatDetailed.getUserDel() : chatDetailed.getAnotherDel();
-
-        // 视角 chat_detailed_zset:to:from 或 chat_detailed_zset:from:to
-        Map<String, Integer> map = new HashMap<>();
-        map.put("user_id", to);
-        map.put("another_id", from);
-        chatSet.add(map);
-
-        if (delFlag == 0) {
-            setMap.computeIfAbsent(from, k -> new HashMap<>())
-                    .computeIfAbsent(to, k -> new HashSet<>())
-                    .add(new RedisUtil.ZSetObject(chatDetailed.getId(), chatDetailed.getTime()));
-        }
-    }
-     */
 }

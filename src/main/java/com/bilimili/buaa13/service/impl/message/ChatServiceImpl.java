@@ -52,8 +52,8 @@ public class ChatServiceImpl implements ChatService {
 
     /**
      * 创建聊天
-     * @param from  发消息者UID (我打开对方的聊天框即对方是发消息者)
-     * @param to    收消息者UID (我打开对方的聊天框即我是收消息者)
+     * @param postId  发消息者UID (我打开对方的聊天框即对方是发消息者)
+     * @param acceptId    收消息者UID (我打开对方的聊天框即我是收消息者)
      * @return 包含创建信息"已存在"/"新创建"/"未知用户"以及相关数据（用户资料、最近聊天等）
      */
     //正常返回map:
@@ -62,10 +62,10 @@ public class ChatServiceImpl implements ChatService {
     //3.发送者信息
     //4.chatDetail
     @Override
-    public Map<String, Object> createChat(Integer from, Integer to) {
+    public Map<String, Object> createChat(Integer postId, Integer acceptId) {
         Map<String, Object> map = new HashMap<>();
         QueryWrapper<Chat> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", from).eq("another_id", to);
+        queryWrapper.eq("post_id", postId).eq("accept_id", acceptId);
         Chat chat = chatMapper.selectOne(queryWrapper);
         //在数据库中查找相应的聊天
         if (chat != null) {
@@ -76,7 +76,7 @@ public class ChatServiceImpl implements ChatService {
                 chat.setLatestTime(new Date());
                 chatMapper.updateById(chat);
                 //将聊天记录添加到redis中
-                redisUtil.zset("chat_zset:" + to, chat.getId());
+                redisUtil.zset("chat_zset:" + acceptId, chat.getId());
                 // 添加到这个用户的最近聊天的有序集合 最好启动定时任务确保数据一致性
                 // 携带信息返回
                 map.put("chat", chat);
@@ -86,7 +86,7 @@ public class ChatServiceImpl implements ChatService {
                     map.put("user", userService.getUserByUId(finalChat.getUserId()));
                 }, taskExecutor);
                 CompletableFuture<Void> detailFuture = CompletableFuture.runAsync(() -> {
-                    map.put("detail", chatDetailedService.getDetails(from, to, 0L));
+                    map.put("detail", chatDetailedService.getMessage(postId, acceptId, 0L));
                 }, taskExecutor);
                 map.put("msg", "新创建");
                 userFuture.join();
@@ -104,14 +104,14 @@ public class ChatServiceImpl implements ChatService {
             QueryWrapper<User> queryWrapper1 = new QueryWrapper<>();
             queryWrapper1.orderByDesc("uid").last("LIMIT 1");
             User user = userMapper.selectOne(queryWrapper1);
-            if (from > user.getUid()) {
+            if (postId > user.getUid()) {
                 map.put("msg", "未知用户");
                 return map;
             }
             // 创建新的chat
-            chat = new Chat(null, from, to, 0, 0, new Date());
+            chat = new Chat(null, postId, acceptId, 0, 0, new Date());
             chatMapper.insert(chat);
-            redisUtil.zset("chat_zset:" + to, chat.getId());    // 添加到这个用户的最近聊天的有序集合
+            redisUtil.zset("chat_zset:" + acceptId, chat.getId());    // 添加到这个用户的最近聊天的有序集合
             // 携带信息返回
             map.put("chat", chat);
             Chat finalChat = chat;
@@ -119,7 +119,7 @@ public class ChatServiceImpl implements ChatService {
                 map.put("user", userService.getUserByUId(finalChat.getUserId()));
             }, taskExecutor);
             CompletableFuture<Void> detailFuture = CompletableFuture.runAsync(() -> {
-                map.put("detail", chatDetailedService.getDetails(from, to, 0L));
+                map.put("detail", chatDetailedService.getMessage(postId, acceptId, 0L));
             }, taskExecutor);
             map.put("msg", "新创建");
             userFuture.join();
@@ -135,7 +135,7 @@ public class ChatServiceImpl implements ChatService {
      * @return  包含用户信息和最近一条聊天内容的聊天列表
      */
     @Override
-    public List<Map<String, Object>> getChatListWithData(Integer uid, Long offset) {
+    public List<Map<String, Object>> getChatDataList(Integer uid, Long offset) {
         Set<Object> set = redisUtil.zReverange("chat_zset:" + uid, offset, offset + 9);
         // 没有数据则返回空列表
         if (set == null || set.isEmpty()) return Collections.emptyList();
@@ -158,7 +158,7 @@ public class ChatServiceImpl implements ChatService {
                     }, taskExecutor);
 
                     CompletableFuture<Void> detailFuture = CompletableFuture.runAsync(() -> {
-                        map.put("detail", chatDetailedService.getDetails(chat.getUserId(), uid, 0L));
+                        map.put("detail", chatDetailedService.getMessage(chat.getUserId(), uid, 0L));
                     }, taskExecutor);
 
                     userFuture.join();
@@ -170,26 +170,26 @@ public class ChatServiceImpl implements ChatService {
 
     /**
      * 获取单个聊天
-     * @param from  发消息者UID
-     * @param to    收消息者UID
+     * @param postId  发消息者UID
+     * @param acceptId    收消息者UID
      * @return  Chat对象
      */
     @Override
-    public Chat getChat(Integer from, Integer to) {
+    public Chat getOneChat(Integer postId, Integer acceptId) {
         QueryWrapper<Chat> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", from).eq("another_id", to);
+        queryWrapper.eq("post_id", postId).eq("accept_id", acceptId);
         return chatMapper.selectOne(queryWrapper);
     }
 
     /**
      * 移除聊天 并清除未读
-     * @param from  发消息者UID（对方）
-     * @param to    收消息者UID（自己）
+     * @param postId  发消息者UID（对方）
+     * @param acceptId    收消息者UID（自己）
      */
     @Override
-    public void delChat(Integer from, Integer to) {
+    public void deleteOneChat(Integer postId, Integer acceptId) {
         QueryWrapper<Chat> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", from).eq("another_id", to);
+        queryWrapper.eq("post_id", postId).eq("accept_id", acceptId);
         Chat chat = chatMapper.selectOne(queryWrapper);
         if (chat == null) return;
 
@@ -198,7 +198,7 @@ public class ChatServiceImpl implements ChatService {
         map.put("type", "移除");
         map.put("id", chat.getId());
         map.put("count", chat.getUnread());
-        Set<Channel> myChannels = IMServer.userChannel.get(to);
+        Set<Channel> myChannels = IMServer.userChannel.get(acceptId);
         if (myChannels != null) {
             for (Channel channel : myChannels) {
                 channel.writeAndFlush(IMResponse.message("whisper", map));
@@ -208,17 +208,17 @@ public class ChatServiceImpl implements ChatService {
         if (chat.getUnread() > 0) {
             // 原本有未读的话 要额外做一点更新
             // msg_unread中的whisper要减去相应数量
-            msgUnreadService. subtractWhisper(to, chat.getUnread());
+            msgUnreadService. subtractWhisper(acceptId, chat.getUnread());
         }
 
         // 更新字段伪删除 并清除未读
         UpdateWrapper<Chat> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.eq("user_id", from).eq("another_id", to).setSql("is_deleted = 1").setSql("unread = 0");
+        updateWrapper.eq("post_id", postId).eq("accept_id", acceptId).setSql("is_deleted = 1").setSql("unread = 0");
         chatMapper.update(null, updateWrapper);
 
         // 移出最近聊天集合
         try {
-            redisUtil.zsetDelMember("chat_zset:" + to, chat.getId());
+            redisUtil.zsetDelMember("chat_zset:" + acceptId, chat.getId());
         } catch (Exception e) {
             log.error("redis移除聊天失败");
         }
@@ -226,48 +226,48 @@ public class ChatServiceImpl implements ChatService {
 
     /**
      * 发送消息时更新对应聊天的未读数和时间
-     * @param from  发送者ID（自己）
-     * @param to    接受者ID（对方）
+     * @param postId  发送者ID（自己）
+     * @param acceptId    接受者ID（对方）
      * @return 返回对方是否在窗口
      */
     @Override
-    public boolean updateChat(Integer from, Integer to) {
+    public boolean updateOneChat(Integer postId, Integer acceptId) {
         // 查询对方是否在窗口
-        String key = "whisper:" + to + ":" + from;  // whisper:用户自己:聊天对象 这里的用户自己就是对方本人 聊天对象就是在发消息的我自己
+        String key = "whisper:" + acceptId + ":" + postId;  // whisper:用户自己:聊天对象 这里的用户自己就是对方本人 聊天对象就是在发消息的我自己
         boolean online = redisUtil.isExist(key);
         try {
             /*
-             既然我要发消息给对方 那么 to -> from 的 chat 表数据一定是存在的 因为发消息前一定创建了聊天
-             所以只要判断 from -> to 的数据是否存在
+             既然我要发消息给对方 那么 acceptId -> postId 的 chat 表数据一定是存在的 因为发消息前一定创建了聊天
+             所以只要判断 postId -> acceptId 的数据是否存在
              */
 
             // 创建两个线程分别处理对应数据
-            // 先更新 to -> from 的数据
+            // 先更新 acceptId -> postId 的数据
             CompletableFuture<Void> future1 = CompletableFuture.runAsync(() -> {
                 QueryWrapper<Chat> queryWrapper1 = new QueryWrapper<>();
-                queryWrapper1.eq("user_id", to).eq("another_id", from);
+                queryWrapper1.eq("post_id", acceptId).eq("accept_id", postId);
                 Chat chat1 = chatMapper.selectOne(queryWrapper1);
 
                 UpdateWrapper<Chat> updateWrapper1 = new UpdateWrapper<>();
-                updateWrapper1.eq("user_id", to)
-                        .eq("another_id", from)
+                updateWrapper1.eq("post_id", acceptId)
+                        .eq("accept_id", postId)
                         .set("is_deleted", 0)
                         .set("latest_time", new Date());
                 chatMapper.update(null, updateWrapper1);
-                redisUtil.zset("chat_zset:" + from, chat1.getId());    // 添加到这个用户的最近聊天的有序集合
+                redisUtil.zset("chat_zset:" + postId, chat1.getId());    // 添加到这个用户的最近聊天的有序集合
             }, taskExecutor);
 
-            // 再查询 from -> to 的数据
+            // 再查询 postId -> acceptId 的数据
             CompletableFuture<Void> future2 = CompletableFuture.runAsync(() -> {
                 QueryWrapper<Chat> queryWrapper2 = new QueryWrapper<>();
-                queryWrapper2.eq("user_id", from).eq("another_id", to);
+                queryWrapper2.eq("post_id", postId).eq("accept_id", acceptId);
                 Chat chat2 = chatMapper.selectOne(queryWrapper2);
 
                 if (online) {
                     // 如果对方在窗口就不更新未读
                     if (chat2 == null) {
                         // 如果对方没聊过天 就创建聊天
-                        chat2 = new Chat(null, from, to, 0, 0, new Date());
+                        chat2 = new Chat(null, postId, acceptId, 0, 0, new Date());
                         chatMapper.insert(chat2);
                     } else {
                         // 如果聊过 就只更新时间和未移除
@@ -277,12 +277,12 @@ public class ChatServiceImpl implements ChatService {
                                 .set("latest_time", new Date());
                         chatMapper.update(null, updateWrapper2);
                     }
-                    redisUtil.zset("chat_zset:" + to, chat2.getId());    // 添加到这个用户的最近聊天的有序集合
+                    redisUtil.zset("chat_zset:" + acceptId, chat2.getId());    // 添加到这个用户的最近聊天的有序集合
                 } else {
                     // 如果不在窗口就未读+1
                     if (chat2 == null) {
                         // 如果对方没聊过天 就创建聊天
-                        chat2 = new Chat(null, from, to, 0, 1, new Date());
+                        chat2 = new Chat(null, postId, acceptId, 0, 1, new Date());
                         chatMapper.insert(chat2);
                     } else {
                         // 如果聊过 就更新未读和时间和未移除
@@ -294,8 +294,8 @@ public class ChatServiceImpl implements ChatService {
                         chatMapper.update(null, updateWrapper2);
                     }
                     // 更新对方用户的未读消息
-                    msgUnreadService.addOneUnread(to, "whisper");
-                    redisUtil.zset("chat_zset:" + to, chat2.getId());    // 添加到这个用户的最近聊天的有序集合
+                    msgUnreadService.addOneUnread(acceptId, "whisper");
+                    redisUtil.zset("chat_zset:" + acceptId, chat2.getId());    // 添加到这个用户的最近聊天的有序集合
                 }
             }, taskExecutor);
 
@@ -322,7 +322,7 @@ public class ChatServiceImpl implements ChatService {
 
             // 清除未读
             QueryWrapper<Chat> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("user_id", from).eq("another_id", to);
+            queryWrapper.eq("post_id", from).eq("accept_id", to);
             Chat chat = chatMapper.selectOne(queryWrapper);
 
             if (chat.getUnread() > 0) {
@@ -343,7 +343,7 @@ public class ChatServiceImpl implements ChatService {
             }
 
             UpdateWrapper<Chat> updateWrapper = new UpdateWrapper<>();
-            updateWrapper.eq("user_id", from).eq("another_id", to).set("unread", 0);
+            updateWrapper.eq("post_id", from).eq("accept_id", to).set("unread", 0);
             chatMapper.update(null, updateWrapper);
 
         } catch (Exception e) {
