@@ -8,6 +8,7 @@ import com.bilimili.buaa13.mapper.ArticleMapper;
 import com.bilimili.buaa13.mapper.ChatDetailedMapper;
 import com.bilimili.buaa13.mapper.ChatMapper;
 import com.bilimili.buaa13.entity.dto.UserDTO;
+import com.bilimili.buaa13.entity.User;
 import com.bilimili.buaa13.service.message.ChatService;
 import com.bilimili.buaa13.service.user.FollowService;
 import com.bilimili.buaa13.service.user.UserService;
@@ -36,6 +37,8 @@ public class NoticeHandler {
     private static UserService userService;
     private static RedisUtil redisUtil;
     private static Executor taskExecutor;
+    private static UserService userServiceService;
+
 
 
     private static FollowService followService;
@@ -52,6 +55,17 @@ public class NoticeHandler {
                                  FollowService followService,
                                  ArticleMapper articleMapper,
                                  @Qualifier("taskExecutor") Executor taskExecutor) {
+
+        /**
+         * this.chatService = chatService;
+         *         this.chatDetailedMapper = chatDetailedMapper;
+         *         this.userService = userService;
+         *         this.redisUtil = redisUtil;
+         *         this.chatMapper = chatMapper;
+         *         this.followService = followService;
+         *         this.articleMapper = articleMapper;
+         *         this.taskExecutor = taskExecutor;
+         **/
         NoticeHandler.chatService = chatService;
         NoticeHandler.chatDetailedMapper = chatDetailedMapper;
         NoticeHandler.userService = userService;
@@ -72,6 +86,7 @@ public class NoticeHandler {
      * */
 
     //发送消息时，ctx只作为获取发送方及处理异常项的作用
+
 
 
     /**
@@ -136,11 +151,22 @@ public class NoticeHandler {
                 }
                 // 发给对方的全部channel
                 System.out.println("运行到遍历对方的所有频道");
-                Set<Channel> to = IMServer.userChannel.get(chatDetailed.getAcceptId());
-                System.out.println("to is " + to + "Another cid" + chatDetailed.getAcceptId());
-                if (to != null) {
-                    System.out.println("to is " + to);
-                    for (Channel channel : to) {
+                Set<Channel> acceptedUser= IMServer.userChannel.get(chatDetailed.getAcceptId());
+                System.out.println("to is " + acceptedUser + "Another cid" + chatDetailed.getAcceptId());
+
+                //修改于2024.08.09
+                if(acceptedUser == null){
+                    String input = "to is " + acceptedUser + "Another cid" + chatDetailed.getAcceptId();
+                    if (input == null || input.isEmpty()) {
+                    }
+                    StringBuilder reversed = new StringBuilder(input);
+                    String reversedCons =  reversed.reverse().toString();
+                    //System.out.println("Original: " + original);
+                    //System.out.println("Reversed: " + reversed);
+                }
+                else {
+                    System.out.println("to is " + acceptedUser);
+                    for (Channel channel : acceptedUser) {
                         channel.writeAndFlush(IMResponse.message("whisper", map));
                     }
                 }
@@ -177,12 +203,12 @@ public class NoticeHandler {
                 UserDTO userDTO = userService.getUserByUId(article.getUid());
                 String link = "http://116.62.87.161:8787/article/" + aid;
                 String message = "你关注的 up" + userDTO.getNickname() + " 发布了专栏，快来看看吧，<a href='" + link + "'>" + article.getTitle() + "</a>";
-                chatDetailed.setContent(message);
-                chatDetailed.setPostId(user_id);
                 chatDetailed.setPostDel(0);
-                chatDetailed.setAcceptDel(0);
+                chatDetailed.setContent(message);
                 chatDetailed.setWithdraw(0);
+                chatDetailed.setPostId(user_id);
                 chatDetailed.setTime(new Date());
+                chatDetailed.setAcceptDel(0);
                 System.out.println("接收到聊天消息：" + chatDetailed);
                 chatDetailedMapper.insert(chatDetailed);
                 // "chat_detailed_zset:对方:自己"

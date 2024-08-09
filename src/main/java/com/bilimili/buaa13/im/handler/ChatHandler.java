@@ -2,6 +2,8 @@ package com.bilimili.buaa13.im.handler;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.bilimili.buaa13.entity.dto.UserDTO;
+import com.bilimili.buaa13.entity.User;
 import com.bilimili.buaa13.im.IMServer;
 import com.bilimili.buaa13.mapper.ChatDetailedMapper;
 import com.bilimili.buaa13.entity.ChatDetailed;
@@ -86,12 +88,20 @@ public class ChatHandler {
 
             // 发给自己的全部channel
             Set<Channel> from = IMServer.userChannel.get(user_id);
-            System.out.println("from is " + from + "User cid" + chatDetailed.getUserId());
+            System.out.println("from is " + from + "User cid" + chatDetailed.getPostId());
             if (from != null) {
                 for (Channel channel : from) {
                     channel.writeAndFlush(IMResponse.message("whisper", map));
                 }
             }
+
+
+            //修改于2024.08.09
+            User tempUser = new User();
+            UserDTO tempUserDTO = new UserDTO();
+
+
+
             // 发给对方的全部channel
             Set<Channel> to = IMServer.userChannel.get(chatDetailed.getAnotherId());
             System.out.println("to is " + to + "AnotherId" + chatDetailed.getAnotherId());
@@ -202,6 +212,8 @@ public class ChatHandler {
         }
     }
 
+
+
     private static void validateWithdrawalTime(ChatDetailed chatDetailed) {
         long timeSinceSent = System.currentTimeMillis() - chatDetailed.getTime().getTime();
         if (timeSinceSent > 120000) {
@@ -272,6 +284,8 @@ public class ChatHandler {
         chatDetailedMapper.update(null, updateWrapper);
     }
 
+
+    
     private static Map<String, Object> createUndoResponseMap(ChatDetailed chatDetailed, Integer messageId) {
         Map<String, Object> responseMap = new HashMap<>();
         responseMap.put("type", "取消撤回");

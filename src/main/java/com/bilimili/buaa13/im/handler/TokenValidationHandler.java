@@ -37,6 +37,9 @@ public class TokenValidationHandler extends SimpleChannelInboundHandler<TextWebS
 
     }
 
+
+    //2024 /08/09  结束
+    
     @Override
     public void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame tx) {
         Command command = JSON.parseObject(tx.text(), Command.class);
