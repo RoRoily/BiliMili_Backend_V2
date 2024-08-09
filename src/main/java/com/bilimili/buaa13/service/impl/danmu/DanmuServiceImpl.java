@@ -24,7 +24,7 @@ import java.util.Set;
 public class DanmuServiceImpl implements DanmuService {
 
 
-    Boolean DanmuContainede = false;
+    private Boolean DanmuContainede = false;
 
     @Autowired
     private DanmuMapper danmuMapper;
