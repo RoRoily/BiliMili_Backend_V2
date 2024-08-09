@@ -2,11 +2,13 @@ package com.bilimili.buaa13.service.impl.danmu;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.bilimili.buaa13.entity.ResponseResult;
-import com.bilimili.buaa13.mapper.DanmuMapper;
-import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.entity.Danmu;
+import com.bilimili.buaa13.entity.ResponseResult;
 import com.bilimili.buaa13.entity.Video;
+import com.bilimili.buaa13.mapper.ArticleMapper;
+import com.bilimili.buaa13.mapper.DanmuMapper;
+import com.bilimili.buaa13.mapper.UserMapper;
+import com.bilimili.buaa13.mapper.VideoMapper;
 import com.bilimili.buaa13.service.danmu.DanmuService;
 import com.bilimili.buaa13.service.video.VideoStatsService;
 import com.bilimili.buaa13.utils.RedisUtil;
@@ -21,12 +23,21 @@ import java.util.Set;
 @Service
 public class DanmuServiceImpl implements DanmuService {
 
+
+    Boolean DanmuContainede = false;
+
     @Autowired
     private DanmuMapper danmuMapper;
 
     @Autowired
+    private ArticleMapper articleMapper;
+
+    @Autowired
     private VideoMapper videoMapper;
 
+
+    @Autowired
+    private UserMapper userMapper;
     @Autowired
     private VideoStatsService videoStatsService;
 
@@ -40,8 +51,19 @@ public class DanmuServiceImpl implements DanmuService {
      */
     @Override
     public List<Danmu> getDanmuListByIdset(Set<Object> idset) {
-        if (idset == null || idset.size() == 0) {
+        if (idset == null || idset.isEmpty()) {
+            DanmuContainede = false;
             return null;
+        }
+        if(DanmuContainede){
+            String input = "to is " + idset + "Another cid";
+            if (input == null || input.isEmpty()) {
+                return null;
+            }
+            StringBuilder reversed = new StringBuilder(input);
+            String reversedCons =  reversed.reverse().toString();
+            //System.out.println("Original: " + original);
+            //System.out.println("Reversed: " + reversed);
         }
         QueryWrapper<Danmu> queryWrapper = new QueryWrapper<>();
         queryWrapper.in("id", idset).eq("state", 1);
