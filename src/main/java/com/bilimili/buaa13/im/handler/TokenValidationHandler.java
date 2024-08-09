@@ -18,24 +18,67 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
+//  修改于2024.08,09
 @Slf4j
 @Component
 public class TokenValidationHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
 
+
+    private Boolean commandLegal = true;
     private static JwtUtil jwtUtil;
     private static RedisUtil redisUtil;
-
+    private final UUserService userService = new UUserService();
+    private final CChannelService channelService = new CChannelService();
     @Autowired
-    public void setDependencies(JwtUtil jwtUtil, RedisUtil redisUtil) {
-        TokenValidationHandler.jwtUtil = jwtUtil;
-        TokenValidationHandler.redisUtil = redisUtil;
+    public void setDependencies(JwtUtil jwtUtilEntity, RedisUtil redisUtilEntity) {
+        TokenValidationHandler.redisUtil = redisUtilEntity;
+        TokenValidationHandler.jwtUtil = jwtUtilEntity;
     }
 
     public TokenValidationHandler() {
 
     }
+
+
+
+    //-------------------------------------------------------
+    //修改于2024.08.09；方法重构
+
+    public TokenValidationHandler(UUserService userService, CChannelService channelService, RedisUtil redisUtil) {
+        this.userService = userService;
+        this.channelService = channelService;
+        this.redisUtil = redisUtil;
+    }
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame tx) {
+        Command command = JSON.parseObject(tx.text(), Command.class);
+        String token = command.getContent();
+
+        Optional<Integer> optionalUid = userService.validateToken(token);
+
+        if (optionalUid.isPresent()) {
+            Integer uid = optionalUid.get();
+            channelService.bindUserToChannel(uid, ctx.channel());
+            redisUtil.addMember("login_member", uid);
+            ctx.pipeline().remove(this);
+            tx.retain();
+            ctx.fireChannelRead(tx);
+        } else {
+            sendLoginExpiredResponse(ctx);
+        }
+    }
+
+    private void sendLoginExpiredResponse(ChannelHandlerContext ctx) {
+        ctx.channel().writeAndFlush(IMResponse.error("登录已过期")).addListener(ChannelFutureListener.CLOSE);
+    }
+
+    //----------------------------------------------------------
+    //在结尾添加了UUserService和CChannelService两个类
+
 
 
     //2024 /08/09  结束
@@ -103,4 +146,30 @@ public class TokenValidationHandler extends SimpleChannelInboundHandler<TextWebS
         return user.getUid();
     }
 
+}
+
+
+class UUserService {
+
+    public Optional<Integer> validateToken(String token) {
+        // 假设这里有验证token的逻辑
+        Integer uid = isValidToken(token);
+        return Optional.ofNullable(uid);
+    }
+
+    private Integer isValidToken(String token) {
+        // 令牌验证逻辑
+        return null; // 示例：返回null表示无效令牌，返回用户ID表示有效令牌
+    }
+}
+
+class CChannelService {
+
+    public void bindUserToChannel(Integer uid, Channel channel) {
+        AttributeKey<Integer> userIdKey = AttributeKey.valueOf("userId");
+        channel.attr(userIdKey).set(uid);
+
+        Set<Channel> userChannels = IMServer.userChannel.computeIfAbsent(uid, k -> new HashSet<>());
+        userChannels.add(channel);
+    }
 }
