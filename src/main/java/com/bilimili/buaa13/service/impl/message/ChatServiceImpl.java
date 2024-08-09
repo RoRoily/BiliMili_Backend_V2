@@ -165,7 +165,7 @@ public class ChatServiceImpl implements ChatService {
         if (chat.getUnreadNum() > 0) {
             // 原本有未读的话 要额外做一点更新
             // msg_unread中的whisper要减去相应数量
-            msgUnreadService. subtractWhisper(acceptId, chat.getUnreadNum());
+            msgUnreadService.subUnreadWhisper(acceptId, chat.getUnreadNum());
         }
 
         // 更新字段伪删除 并清除未读
@@ -191,7 +191,7 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public boolean updateOneChat(Integer postId, Integer acceptId) {
         // 查询对方是否在窗口
-        String key = "whisper:" + acceptId + ":" + postId;  // whisper:用户自己:聊天对象 这里的用户自己就是对方本人 聊天对象就是在发消息的我自己
+        String key = "message:" + acceptId + ":" + postId;  // message:用户自己:聊天对象 这里的用户自己就是对方本人 聊天对象就是在发消息的我自己
         boolean online = redisUtil.isExist(key);
         ExecutorService executorService = Executors.newFixedThreadPool(10);
         try {
@@ -234,7 +234,7 @@ public class ChatServiceImpl implements ChatService {
                         chatMapper.update(null, updateWrapperPA);
                     }
                     // 更新对方用户的未读消息
-                    msgUnreadService.addOneUnread(acceptId, "whisper");
+                    msgUnreadService.addOneUnread(acceptId, "message");
                     //注释Redis
                     //redisUtil.zset("chat_zset:" + acceptId, chatPA.getId());    // 添加到这个用户的最近聊天的有序集合
                 } else {
@@ -274,7 +274,7 @@ public class ChatServiceImpl implements ChatService {
         try {
             Future<Executor> future = executorService.submit(()->{
                 // 更新为在线状态
-                String key = "whisper:" + acceptId + ":" + postId;  // whisper:用户自己:聊天对象
+                String key = "message:" + acceptId + ":" + postId;  // message:用户自己:聊天对象
                 redisUtil.setValue(key, true);
                 // 清除未读
 
@@ -292,7 +292,7 @@ public class ChatServiceImpl implements ChatService {
                     map.put("type", "已读");
                     setMapChannel(acceptId, chat, map);
                     // msg_unread中的whisper要减去相应数量
-                    msgUnreadService.subtractWhisper(acceptId, chat.getUnreadNum());
+                    msgUnreadService.subUnreadWhisper(acceptId, chat.getUnreadNum());
                 }
 
             },taskExecutor);
@@ -312,7 +312,7 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public void updateStateOutline(Integer postId, Integer acceptId) {
         try {
-            String key = "whisper:" + acceptId + ":" + postId;  // whisper:用户自己:聊天对象
+            String key = "message:" + acceptId + ":" + postId;  // message:用户自己:聊天对象
             // 删除key更新为离开状态
             redisUtil.delValue(key);
         } catch (Exception e) {
@@ -343,7 +343,7 @@ public class ChatServiceImpl implements ChatService {
         Set<Channel> myChannels = IMServer.userChannel.get(acceptId);
         if (myChannels != null) {
             for (Channel channel : myChannels) {
-                channel.writeAndFlush(IMResponse.message("whisper", map));
+                channel.writeAndFlush(IMResponse.message("message", map));
             }
         }
     }
@@ -365,6 +365,60 @@ public class ChatServiceImpl implements ChatService {
             // 重新中断当前线程
             pool.shutdownNow();
             Thread.currentThread().interrupt();
+        }
+    }
+
+    public static void ParallelStreamChat() {
+        List<Integer> list = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+
+        list.parallelStream().forEach(item -> {
+            System.out.println("Processing Chat item: " + item + " - " + Thread.currentThread().getName());
+        });
+    }
+
+    private static class Task extends RecursiveAction {
+        private final int workload;
+
+        private Task(int workload) {
+            this.workload = workload;
+        }
+
+        @Override
+        protected void compute() {
+            if (workload > 1) {
+                int half = workload / 2;
+                Task task1 = new Task(half);
+                Task task2 = new Task(half);
+                invokeAll(task1, task2);
+            } else {
+                System.out.println("Task with Chat workload " + workload + " executed");
+            }
+        }
+    }
+
+    public static void TestChatExecutor(String[] args) {
+        // 创建一个固定大小的线程池
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
+
+        try {
+            // 提交任务1
+            Future<?> future1 = executorService.submit(() -> {
+                System.out.println("Chat Task 1 executed");
+            });
+
+            // 提交任务2
+            Future<?> future2 = executorService.submit(() -> {
+                System.out.println("Chat Task 2 executed");
+            });
+
+            // 等待任务完成
+            future1.get();
+            future2.get();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        } finally {
+            // 优雅地关闭线程池
+            shutdownAndAwaitTermination(executorService);
         }
     }
 }

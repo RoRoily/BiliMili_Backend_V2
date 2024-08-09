@@ -92,7 +92,7 @@ class ChatHandler {
             System.out.println("from is " + from + "User cid" + chatDetailed.getPostId());
             if (from != null) {
                 for (Channel channel : from) {
-                    channel.writeAndFlush(IMResponse.message("whisper", map));
+                    channel.writeAndFlush(IMResponse.message("message", map));
                 }
             }
 
@@ -108,7 +108,7 @@ class ChatHandler {
             System.out.println("to is " + to + "AnotherId" + chatDetailed.getAcceptId());
             if (to != null) {
                 for (Channel channel : to) {
-                    channel.writeAndFlush(IMResponse.message("whisper", map));
+                    channel.writeAndFlush(IMResponse.message("message", map));
                 }
             }
 
@@ -161,7 +161,7 @@ class ChatHandler {
             System.out.println("from is " + from + "User cid" + chatDetailed.getPostId());
             if (from != null) {
                 for (Channel channel : from) {
-                    channel.writeAndFlush(IMResponse.message("whisper", map));
+                    channel.writeAndFlush(IMResponse.message("message", map));
                 }
             }
             // 发给对方的全部channel
@@ -169,7 +169,7 @@ class ChatHandler {
             System.out.println("to is " + to + "AnotherId" + chatDetailed.getAcceptId());
             if (to != null) {
                 for (Channel channel : to) {
-                    channel.writeAndFlush(IMResponse.message("whisper", map));
+                    channel.writeAndFlush(IMResponse.message("message", map));
                 }
             }
 
@@ -241,7 +241,7 @@ class ChatHandler {
         Stream.of(IMServer.userChannel.get(userId), IMServer.userChannel.get(anotherId))
                 .filter(Objects::nonNull)
                 .flatMap(Set::stream)
-                .forEach(channel -> channel.writeAndFlush(IMResponse.message("whisper", responseMap)));
+                .forEach(channel -> channel.writeAndFlush(IMResponse.message("message", responseMap)));
     }
 
 
@@ -300,7 +300,7 @@ class ChatHandler {
         Stream.of(IMServer.userChannel.get(userId), IMServer.userChannel.get(anotherId))
                 .filter(Objects::nonNull)
                 .flatMap(Set::stream)
-                .forEach(channel -> channel.writeAndFlush(IMResponse.message("whisper", responseMap)));
+                .forEach(channel -> channel.writeAndFlush(IMResponse.message("message", responseMap)));
     }
 
 }

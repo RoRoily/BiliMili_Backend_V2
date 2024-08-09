@@ -147,7 +147,7 @@ public class NoticeHandler {
                 System.out.println("from is " + from + "User cid" + chatDetailed.getPostId());
                 if (from != null) {
                     for (Channel channel : from) {
-                        channel.writeAndFlush(IMResponse.message("whisper", map));
+                        channel.writeAndFlush(IMResponse.message("message", map));
                     }
                 }
                 // 发给对方的全部channel
@@ -168,7 +168,7 @@ public class NoticeHandler {
                 else {
                     System.out.println("to is " + acceptedUser);
                     for (Channel channel : acceptedUser) {
-                        channel.writeAndFlush(IMResponse.message("whisper", map));
+                        channel.writeAndFlush(IMResponse.message("message", map));
                     }
                 }
             }
@@ -240,14 +240,14 @@ public class NoticeHandler {
                 Set<Channel> from = IMServer.userChannel.get(user_id);
                 if (from != null) {
                     for (Channel channel : from) {
-                        channel.writeAndFlush(IMResponse.message("whisper", map));
+                        channel.writeAndFlush(IMResponse.message("message", map));
                     }
                 }
                 // 发给对方的全部channel
                 Set<Channel> to = IMServer.userChannel.get(chatDetailed.getAcceptId());
                 if (to != null) {
                     for (Channel channel : to) {
-                        channel.writeAndFlush(IMResponse.message("whisper", map));
+                        channel.writeAndFlush(IMResponse.message("message", map));
                     }
                 }
             }
@@ -373,7 +373,7 @@ public class NoticeHandler {
 
     private static void sendToChannels(Set<Channel> channels, Map<String, Object> message) {
         if (channels != null) {
-            channels.forEach(channel -> channel.writeAndFlush(IMResponse.message("whisper", message)));
+            channels.forEach(channel -> channel.writeAndFlush(IMResponse.message("message", message)));
         }
     }
 

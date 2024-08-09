@@ -88,7 +88,7 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
             if (IMServer.userChannel.get(uid).size() == 0) {
                 IMServer.userChannel.remove(uid);
 //                System.out.println("当前在线人数：" + IMServer.userChannel.size());
-                redisUtil.deleteKeysWithPrefix("whisper:" + uid + ":"); // 清除全部在聊天窗口的状态
+                redisUtil.deleteKeysWithPrefix("message:" + uid + ":"); // 清除全部在聊天窗口的状态
                 redisUtil.delMember("login_member", uid);   // 从在线用户集合中移除
             }
         }

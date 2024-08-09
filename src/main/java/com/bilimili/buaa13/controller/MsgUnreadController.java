@@ -25,17 +25,17 @@ public class MsgUnreadController {
     public ResponseResult getMsgUnread() {
         Integer uid = currentUser.getUserId();
         ResponseResult responseResult = new ResponseResult();
-        responseResult.setData(msgUnreadService.getUnread(uid));
+        responseResult.setData(msgUnreadService.getUnreadByUid(uid));
         return responseResult;
     }
 
     /**
      * 清除某一列的未读消息提示
-     * @param column    msg_unread表列名 "reply"/"at"/"up_vote"/"system"/"whisper"/"dynamic"
+     * @param column    msg_unread表列名 "reply"/"at_num"/"up_vote"/"system_message"/"message"/"dynamic"
      */
     @PostMapping("/msg-unread/clear")
     public void clearUnread(@RequestParam("column") String column) {
         Integer uid = currentUser.getUserId();
-        msgUnreadService.clearUnread(uid, column);
+        msgUnreadService.clearOneUnread(uid, column);
     }
 }

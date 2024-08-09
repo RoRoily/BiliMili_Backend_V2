@@ -6,7 +6,7 @@
 # regarding copyright ownership.  The ASF licenses this file
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
-# with the License.  You may obtain a copy of the License at
+# with the License.  You may obtain a copy of the License at_num
 #
 #    https://www.apache.org/licenses/LICENSE-2.0
 #
@@ -99,7 +99,7 @@ if [ -z "$M2_HOME" ] ; then
   M2_HOME=`cd "$M2_HOME" && pwd`
 
   cd "$saveddir"
-  # echo Using m2 at $M2_HOME
+  # echo Using m2 at_num $M2_HOME
 fi
 
 # For Cygwin, ensure paths are in UNIX format before anything is touched

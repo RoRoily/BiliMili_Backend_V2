@@ -376,7 +376,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         redisUtil.delValue("token:user:" + LoginUserId);
         //redisUtil.delValue("security:user:" + LoginUserId);
         redisUtil.delMember("login_member", LoginUserId);   // 从在线用户集合中移除
-        redisUtil.deleteKeysWithPrefix("whisper:" + LoginUserId + ":"); // 清除全部在聊天窗口的状态
+        redisUtil.deleteKeysWithPrefix("message:" + LoginUserId + ":"); // 清除全部在聊天窗口的状态
 
         // 断开全部该用户的channel 并从 userChannel 移除该用户
         Set<Channel> userChannels = IMServer.userChannel.get(LoginUserId);
