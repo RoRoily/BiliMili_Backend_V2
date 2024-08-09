@@ -8,6 +8,7 @@ import com.bilimili.buaa13.entity.User;
 import com.bilimili.buaa13.utils.JwtUtil;
 import com.bilimili.buaa13.utils.RedisUtil;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
@@ -27,11 +28,11 @@ import java.util.Set;
 public class TokenValidationHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
 
 
-    private Boolean commandLegal = true;
+    private final Boolean commandLegal = true;
     private static JwtUtil jwtUtil;
     private static RedisUtil redisUtil;
-    private final UUserService userService = new UUserService();
-    private final CChannelService channelService = new CChannelService();
+    private UUserService userService = new UUserService();
+    private CChannelService channelService = new CChannelService();
     @Autowired
     public void setDependencies(JwtUtil jwtUtilEntity, RedisUtil redisUtilEntity) {
         TokenValidationHandler.redisUtil = redisUtilEntity;
@@ -50,11 +51,10 @@ public class TokenValidationHandler extends SimpleChannelInboundHandler<TextWebS
     public TokenValidationHandler(UUserService userService, CChannelService channelService, RedisUtil redisUtil) {
         this.userService = userService;
         this.channelService = channelService;
-        this.redisUtil = redisUtil;
+        TokenValidationHandler.redisUtil = redisUtil;
     }
 
-    @Override
-    protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame tx) {
+    protected void channelRead1(ChannelHandlerContext ctx, TextWebSocketFrame tx) {
         Command command = JSON.parseObject(tx.text(), Command.class);
         String token = command.getContent();
 
@@ -151,7 +151,7 @@ public class TokenValidationHandler extends SimpleChannelInboundHandler<TextWebS
 
 class UUserService {
 
-    public Optional<Integer> validateToken(String token) {
+    Optional<Integer> validateToken(String token) {
         // 假设这里有验证token的逻辑
         Integer uid = isValidToken(token);
         return Optional.ofNullable(uid);
